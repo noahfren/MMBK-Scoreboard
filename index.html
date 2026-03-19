@@ -208,17 +208,49 @@
     border-radius: 8px;
     padding: 0.75rem 1rem;
     margin-bottom: 0.5rem;
+  }
+  .team-card.eliminated { opacity: 0.5; }
+  .team-card-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
   }
-  .team-card.eliminated { opacity: 0.5; }
   .team-card .team-name { font-weight: 600; }
   .team-card .team-status { font-size: 0.85rem; text-align: right; }
   .team-card .pts-earned { color: var(--green); font-weight: 700; }
   .team-card .eliminated-tag { color: var(--red); font-size: 0.8rem; }
   .team-card .in-progress { color: var(--accent2); font-size: 0.8rem; }
   .team-card .game-score { color: var(--muted); font-size: 0.8rem; }
+
+  /* Game log under each team */
+  .game-log {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--border);
+  }
+  .game-log-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.2rem 0;
+    font-size: 0.8rem;
+  }
+  .log-date { color: var(--muted); min-width: 50px; }
+  .log-result {
+    font-weight: 700;
+    min-width: 32px;
+    text-align: center;
+    padding: 0.1rem 0.3rem;
+    border-radius: 3px;
+    font-size: 0.7rem;
+  }
+  .log-win { background: rgba(46,204,113,0.2); color: var(--green); }
+  .log-loss { background: rgba(231,76,60,0.2); color: var(--red); }
+  .log-live { background: rgba(224,78,57,0.2); color: var(--accent2); }
+  .log-matchup { color: var(--text); flex: 1; }
+  .log-pts { font-weight: 700; min-width: 50px; text-align: right; }
+  .log-pts-pos { color: var(--green); }
+  .log-pts-zero { color: var(--muted); }
 
   .no-games { text-align: center; color: var(--muted); padding: 2rem; grid-column: 1 / -1; }
   .error-msg { text-align: center; color: var(--red); padding: 2rem; grid-column: 1 / -1; }
@@ -481,6 +513,7 @@ function calculateScores(games) {
         status: t.id ? "alive" : "not-in-tournament",
         pts: 0,
         gameInfo: null,
+        gameHistory: [],  // all games this team has played
       });
     }
   }
@@ -520,34 +553,44 @@ function calculateScores(games) {
     }
   }
 
-  // Second pass: calculate points from ALL games (not just most recent)
-  // Skip First Four (play-in) games — no points awarded for those
-  for (const game of games) {
-    if (!game || !game.isFinal || game.isFirstFour) continue;
-    for (const side of ["home", "away"]) {
-      const otherSide = side === "home" ? "away" : "home";
-      const teamId = game[side].teamId;
-      const entry = idToDraftEntry[teamId];
-      if (!entry) continue;
-      if (game[side].winner) {
-        const diff = game[side].score - game[otherSide].score;
-        scores[entry.owner].teams[entry.index].pts += diff;
-      }
-    }
-  }
+  // Second pass: calculate points and build game history from ALL games
+  // Sort games by date so history is chronological
+  const sortedGames = [...games].filter(Boolean).sort((a, b) => new Date(a.date) - new Date(b.date));
 
-  // Also add live game points (potential, not finalized)
-  // Skip First Four games here too
-  for (const game of games) {
-    if (!game || !game.isLive || game.isFirstFour) continue;
+  for (const game of sortedGames) {
+    if (!game.isFinal && !game.isLive) continue;
     for (const side of ["home", "away"]) {
       const otherSide = side === "home" ? "away" : "home";
       const teamId = game[side].teamId;
       const entry = idToDraftEntry[teamId];
       if (!entry) continue;
+
+      const teamEntry = scores[entry.owner].teams[entry.index];
+      const won = game.isFinal ? game[side].winner : (game[side].score > game[otherSide].score);
       const diff = game[side].score - game[otherSide].score;
-      if (diff > 0) {
-        scores[entry.owner].teams[entry.index].pts += diff;
+      const ptsEarned = (game.isFirstFour || !won) ? 0 : (game.isFinal ? diff : Math.max(0, diff));
+
+      // Add to game history
+      teamEntry.gameHistory.push({
+        date: game.date,
+        opponent: game[otherSide].shortName,
+        opponentSeed: game[otherSide].seed,
+        teamScore: game[side].score,
+        oppScore: game[otherSide].score,
+        won,
+        ptsEarned,
+        isFirstFour: game.isFirstFour,
+        isLive: game.isLive,
+        statusDetail: game.statusDetail,
+      });
+
+      // Add points (skip First Four)
+      if (!game.isFirstFour) {
+        if (game.isFinal && won) {
+          teamEntry.pts += diff;
+        } else if (game.isLive && diff > 0) {
+          teamEntry.pts += diff;
+        }
       }
     }
   }
@@ -638,15 +681,36 @@ function renderPlayerDetail(scores) {
       statusHtml = `<span style="color:var(--green);font-size:0.85rem;">Active</span>`;
     }
 
+    // Build game log rows
+    let gameLogHtml = "";
+    if (t.gameHistory.length > 0) {
+      const rows = t.gameHistory.map(g => {
+        const result = g.isLive ? "LIVE" : (g.won ? "W" : "L");
+        const resultClass = g.isLive ? "log-live" : (g.won ? "log-win" : "log-loss");
+        const ptsClass = g.ptsEarned > 0 ? "log-pts-pos" : "log-pts-zero";
+        const ptsLabel = g.isFirstFour ? "Play-in" : (g.ptsEarned > 0 ? `+${g.ptsEarned}` : "0");
+        const dateStr = new Date(g.date).toLocaleDateString([], { month: 'short', day: 'numeric' });
+        const liveDetail = g.isLive ? ` (${g.statusDetail || 'LIVE'})` : "";
+        return `
+          <div class="game-log-row">
+            <span class="log-date">${dateStr}</span>
+            <span class="log-result ${resultClass}">${result}</span>
+            <span class="log-matchup">${g.teamScore}-${g.oppScore} vs ${g.opponentSeed ? '(' + g.opponentSeed + ') ' : ''}${g.opponent}${liveDetail}</span>
+            <span class="log-pts ${ptsClass}">${ptsLabel}</span>
+          </div>`;
+      }).join("");
+      gameLogHtml = `<div class="game-log">${rows}</div>`;
+    }
+
     return `
       <div class="team-card ${eliminatedClass}">
-        <div>
+        <div class="team-card-header">
           <span class="team-name">${t.name}</span>
+          <div class="team-status">
+            ${statusHtml}
+          </div>
         </div>
-        <div class="team-status">
-          ${statusHtml}
-          ${gameHtml}
-        </div>
+        ${gameLogHtml}
       </div>
     `;
   }).join("");
