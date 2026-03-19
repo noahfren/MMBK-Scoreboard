@@ -176,6 +176,17 @@
     background: rgba(0,156,222,0.2);
     color: var(--accent);
   }
+  .tile-pts-widget {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin-left: 0.5rem;
+    font-size: 0.75rem;
+  }
+  .tile-pts-value {
+    color: var(--green);
+    font-weight: 700;
+  }
 
   /* Tabs */
   .tabs {
@@ -665,7 +676,8 @@ function renderPlayerDetail(scores) {
         gameHtml = `<div class="game-score">${t.gameInfo.home.name} ${t.gameInfo.home.score} - ${t.gameInfo.away.score} ${t.gameInfo.away.name}</div>`;
       }
     } else if (t.status === "eliminated") {
-      statusHtml = `<span class="eliminated-tag">Eliminated</span>`;
+      const lifetimePts = t.pts > 0 ? ` (${t.pts} pts)` : "";
+      statusHtml = `<span class="eliminated-tag">Eliminated${lifetimePts}</span>`;
       if (t.gameInfo) {
         gameHtml = `<div class="game-score">${t.gameInfo.home.name} ${t.gameInfo.home.score} - ${t.gameInfo.away.score} ${t.gameInfo.away.name}</div>`;
       }
@@ -749,10 +761,20 @@ function renderLiveGames(games) {
 
   container.innerHTML = displayGames.map(g => {
     let statusBadge = "";
+    let pointsWidget = "";
     if (g.isLive) {
       statusBadge = `<span class="game-status-badge status-live">${g.statusDetail || 'LIVE'}</span>`;
     } else if (g.isFinal) {
       statusBadge = `<span class="game-status-badge status-final">Final</span>`;
+      // Build points widget showing who got points from this game
+      if (!g.isFirstFour) {
+        const winnerSide = g.home.winner ? "home" : "away";
+        const winnerOwner = findOwner(g[winnerSide].teamId);
+        const margin = Math.abs(g.home.score - g.away.score);
+        if (winnerOwner) {
+          pointsWidget = `<div class="tile-pts-widget"><span class="owner-tag">${winnerOwner}</span> <span class="tile-pts-value">+${margin}</span></div>`;
+        }
+      }
     } else {
       const gameTime = new Date(g.date).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
       statusBadge = `<span class="game-status-badge status-upcoming">${gameTime}</span>`;
@@ -771,7 +793,7 @@ function renderLiveGames(games) {
 
     return `
       <div class="${tileClass}">
-        <div class="game-tile-status">${statusBadge}</div>
+        <div class="game-tile-status">${statusBadge}${pointsWidget}</div>
         <div class="game-tile-row">
           <div class="tile-team ${awayClass}">
             <span class="tile-seed">${g.away.seed || ''}</span>
