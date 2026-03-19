@@ -209,7 +209,7 @@
 <body>
 
 <div class="header">
-  <h1>March Madness Pool 2025</h1>
+  <h1>March Madness Pool 2026</h1>
   <div class="subtitle">8 Players &bull; 64 Teams &bull; $25 Buy-in</div>
   <div class="prizes">1st: $125 &bull; 2nd: $50 &bull; 3rd: $25</div>
 </div>
@@ -254,61 +254,64 @@ const DRAFT = {
     { name: "Duke", id: "150" },
     { name: "Gonzaga", id: "2250" },
     { name: "Vanderbilt", id: "238" },
-    { name: "UCF", id: null },
-    { name: "USF", id: null },
-    { name: "Villanova", id: null },
-    { name: "Penn", id: null },
-    { name: "Prairie View A&M / Lehigh", id: null }
+    { name: "UCF", id: "2116" },
+    { name: "South Florida", id: "58" },
+    { name: "Villanova", id: "222" },
+    { name: "Penn", id: "219" },
+    { name: "Prairie View A&M", id: "2504" },
+    { name: "Lehigh", id: "2329" }
   ],
   "Carl": [
     { name: "Michigan", id: "130" },
     { name: "Arkansas", id: "8" },
     { name: "Wisconsin", id: "275" },
-    { name: "Ohio State", id: null },
+    { name: "Ohio State", id: "194" },
     { name: "Utah State", id: "328" },
-    { name: "Northern Iowa", id: null },
-    { name: "Hofstra", id: null },
-    { name: "Siena", id: null }
+    { name: "Northern Iowa", id: "2460" },
+    { name: "Hofstra", id: "2275" },
+    { name: "Siena", id: "2561" }
   ],
   "Dunn": [
     { name: "Arizona", id: "12" },
     { name: "Michigan State", id: "127" },
     { name: "Texas Tech", id: "2641" },
     { name: "Clemson", id: "228" },
-    { name: "Santa Clara", id: null },
+    { name: "Santa Clara", id: "2541" },
     { name: "Akron", id: "2006" },
-    { name: "Cal Baptist", id: null },
-    { name: "Tennessee State", id: null }
+    { name: "California Baptist", id: "2856" },
+    { name: "Tennessee State", id: "2634" }
   ],
   "Pat": [
     { name: "Houston", id: "248" },
     { name: "St. John's", id: "2599" },
-    { name: "Nebraska", id: null },
+    { name: "Nebraska", id: "158" },
     { name: "UCLA", id: "26" },
-    { name: "Iowa", id: null },
+    { name: "Iowa", id: "2294" },
     { name: "Missouri", id: "142" },
-    { name: "Hawaii", id: null },
-    { name: "Furman", id: null }
+    { name: "Hawai'i", id: "62" },
+    { name: "Furman", id: "231" }
   ],
   "Matt": [
     { name: "Purdue", id: "2509" },
-    { name: "Virginia", id: null },
+    { name: "Virginia", id: "258" },
     { name: "North Carolina", id: "153" },
     { name: "Saint Mary's", id: "2608" },
-    { name: "Saint Louis", id: null },
+    { name: "Saint Louis", id: "139" },
     { name: "VCU", id: "2670" },
-    { name: "Wright State", id: null },
-    { name: "Idaho", id: null }
+    { name: "Wright State", id: "2750" },
+    { name: "Idaho", id: "70" }
   ],
   "Taylor": [
     { name: "Iowa State", id: "66" },
     { name: "Alabama", id: "333" },
     { name: "BYU", id: "252" },
     { name: "Kentucky", id: "96" },
-    { name: "Miami OH / SMU", id: null },
+    { name: "Miami (OH)", id: "193" },
+    { name: "SMU", id: "2567" },
     { name: "High Point", id: "2272" },
-    { name: "Queens (NC)", id: null },
-    { name: "UMBC / Howard", id: null }
+    { name: "Queens", id: "2511" },
+    { name: "UMBC", id: "2378" },
+    { name: "Howard", id: "47" }
   ],
   "Noah": [
     { name: "Florida", id: "57" },
@@ -316,19 +319,20 @@ const DRAFT = {
     { name: "Louisville", id: "97" },
     { name: "Tennessee", id: "2633" },
     { name: "Texas A&M", id: "245" },
-    { name: "Texas / NC State", id: "251" },
-    { name: "North Dakota State", id: null },
-    { name: "Long Island", id: null }
+    { name: "Texas", id: "251" },
+    { name: "NC State", id: "152" },
+    { name: "North Dakota State", id: "2449" },
+    { name: "Long Island", id: "112358" }
   ],
   "Brooke": [
     { name: "UConn", id: "41" },
     { name: "Kansas", id: "2305" },
-    { name: "Miami", id: null },
-    { name: "TCU", id: null },
+    { name: "Miami", id: "2390" },
+    { name: "TCU", id: "2628" },
     { name: "Georgia", id: "61" },
     { name: "McNeese", id: "2377" },
     { name: "Troy", id: "2653" },
-    { name: "Kennesaw State", id: null }
+    { name: "Kennesaw State", id: "338" }
   ]
 };
 
@@ -371,9 +375,9 @@ async function fetchScores(dateStr) {
 // Get tournament dates to check (current tournament window)
 function getTournamentDates() {
   const dates = [];
-  // 2025 NCAA Tournament: March 18 - April 7
-  const start = new Date(2025, 2, 18); // March 18
-  const end = new Date(2025, 3, 8);    // April 8
+  // 2026 NCAA Tournament: March 17 - April 6
+  const start = new Date(2026, 2, 17); // March 17
+  const end = new Date(2026, 3, 7);    // April 7
   const today = new Date();
   const endDate = today < end ? today : end;
   for (let d = new Date(start); d <= endDate; d.setDate(d.getDate() + 1)) {
