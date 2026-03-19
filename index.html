@@ -4,322 +4,76 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>March Madness Ball Knowers 2026</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        navy: { DEFAULT: '#0a2240', light: '#0d2d5e', dark: '#001a38', header: '#002b5c' },
+        ncaa: { blue: '#009cde', red: '#e04e39' },
+        mm: { green: '#2ecc71', red: '#e74c3c', gold: '#f5c518', muted: '#8fadc8', border: '#1a4a7a' },
+      }
+    }
+  }
+}
+</script>
 <style>
-  :root {
-    --bg: #0a2240;
-    --card: #0d2d5e;
-    --accent: #009cde;
-    --accent2: #e04e39;
-    --green: #2ecc71;
-    --red: #e74c3c;
-    --gold: #f5c518;
-    --text: #ffffff;
-    --muted: #8fadc8;
-    --border: #1a4a7a;
-    --header-bg: #002b5c;
-  }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-  }
-  .header {
-    text-align: center;
-    padding: 1.5rem 1rem 1rem;
-    background: linear-gradient(180deg, #001a38, var(--header-bg));
-    border-bottom: 3px solid var(--accent);
-  }
-  .header h1 {
-    font-size: 2rem;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #fff;
-  }
-  .header h1 span { color: var(--accent); }
-  .header .subtitle { color: var(--muted); margin-top: 0.25rem; font-size: 0.9rem; }
-  .header .prizes {
-    margin-top: 0.5rem;
-    font-size: 0.85rem;
-    color: var(--gold);
-  }
-  .update-bar {
-    text-align: center;
-    padding: 0.5rem;
-    font-size: 0.8rem;
-    color: var(--muted);
-    background: var(--header-bg);
-    border-bottom: 1px solid var(--border);
-  }
-  .update-bar .live-dot {
-    display: inline-block;
-    width: 8px; height: 8px;
-    background: var(--green);
-    border-radius: 50%;
-    margin-right: 4px;
-    animation: pulse 2s infinite;
-  }
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.3; }
-  }
-  .container { max-width: 1200px; margin: 0 auto; padding: 1rem; }
-  .section-title {
-    font-size: 1.3rem;
-    margin-bottom: 0.75rem;
-    color: var(--accent);
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-    font-weight: 700;
-  }
-
-  /* Standings */
-  .standings { margin-bottom: 2rem; }
-  .standings-table {
-    width: 100%;
-    border-collapse: collapse;
-    background: var(--card);
-    border-radius: 8px;
-    overflow: hidden;
-    border: 1px solid var(--border);
-  }
-  .standings-table th {
-    background: var(--header-bg);
-    padding: 0.6rem 0.75rem;
-    text-align: left;
-    font-size: 0.8rem;
-    text-transform: uppercase;
-    color: var(--muted);
-    letter-spacing: 0.05em;
-  }
-  .standings-table td {
-    padding: 0.6rem 0.75rem;
-    border-top: 1px solid var(--border);
-    font-size: 0.95rem;
-  }
-  .standings-table tr:hover { background: rgba(0,156,222,0.08); }
-  .rank { font-weight: 700; color: var(--accent); width: 40px; }
-  .rank-1 { color: #ffd700; }
-  .rank-2 { color: #c0c0c0; }
-  .rank-3 { color: #cd7f32; }
-  .player-name { font-weight: 600; }
-  .score { font-weight: 700; font-size: 1.1rem; color: var(--green); }
-  .teams-alive { color: var(--muted); font-size: 0.85rem; }
-  .money { color: var(--gold); font-weight: 600; }
-
-  /* Today's Games - Tile Grid */
-  .live-games { margin-bottom: 2rem; }
-  .games-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.75rem;
-  }
-  .game-tile {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 0.75rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  .game-tile.live-game { border-color: var(--accent2); box-shadow: 0 0 8px rgba(224,78,57,0.3); }
-  .game-tile .game-tile-status {
-    text-align: center;
-    margin-bottom: 0.25rem;
-  }
-  .game-tile .game-tile-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.2rem 0;
-  }
-  .game-tile .tile-team {
-    font-weight: 600;
-    font-size: 0.9rem;
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
-  }
-  .game-tile .tile-seed {
-    color: var(--muted);
-    font-size: 0.75rem;
-    font-weight: 400;
-  }
-  .game-tile .tile-score {
-    font-weight: 700;
-    font-size: 1.05rem;
-    min-width: 28px;
-    text-align: right;
-  }
-  .game-tile .tile-team.winner { color: var(--green); }
-  .game-tile .tile-team.loser { color: var(--muted); opacity: 0.6; }
-  .game-tile .tile-score.winner { color: var(--green); }
-  .game-tile .tile-score.loser { color: var(--muted); opacity: 0.6; }
-  .game-status-badge {
-    display: inline-block;
-    padding: 0.15rem 0.5rem;
-    border-radius: 4px;
-    font-size: 0.7rem;
-    font-weight: 600;
-    text-transform: uppercase;
-  }
-  .status-live { background: rgba(224,78,57,0.2); color: var(--accent2); }
-  .status-final { background: rgba(143,173,200,0.15); color: var(--muted); }
-  .status-upcoming { background: rgba(0,156,222,0.15); color: var(--accent); }
-  .owner-tag {
-    font-size: 0.65rem;
-    padding: 0.1rem 0.35rem;
-    border-radius: 3px;
-    background: rgba(0,156,222,0.2);
-    color: var(--accent);
-  }
-  .tile-pts-widget {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-    margin-left: 0.5rem;
-    font-size: 0.75rem;
-  }
-  .tile-pts-value {
-    color: var(--green);
-    font-weight: 700;
-  }
-
-  /* Tabs */
-  .tabs {
-    display: flex;
-    gap: 0.25rem;
-    margin-bottom: 1rem;
-    flex-wrap: wrap;
-  }
-  .tab {
-    padding: 0.5rem 1rem;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.85rem;
-    color: var(--muted);
-    transition: all 0.2s;
-  }
-  .tab:hover { border-color: var(--accent); color: var(--text); }
-  .tab.active {
-    background: var(--accent);
-    color: white;
-    border-color: var(--accent);
-  }
-
-  /* Player detail */
-  .team-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 0.75rem 1rem;
-    margin-bottom: 0.5rem;
-  }
-  .team-card.eliminated { opacity: 0.5; }
-  .team-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .team-card .team-name { font-weight: 600; }
-  .team-card .team-status { font-size: 0.85rem; text-align: right; }
-  .team-card .pts-earned { color: var(--green); font-weight: 700; }
-  .team-card .eliminated-tag { color: var(--red); font-size: 0.8rem; }
-  .team-card .in-progress { color: var(--accent2); font-size: 0.8rem; }
-  .team-card .game-score { color: var(--muted); font-size: 0.8rem; }
-
-  /* Game log under each team */
-  .game-log {
-    margin-top: 0.5rem;
-    padding-top: 0.5rem;
-    border-top: 1px solid var(--border);
-  }
-  .game-log-row {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    padding: 0.2rem 0;
-    font-size: 0.8rem;
-  }
-  .log-date { color: var(--muted); min-width: 50px; }
-  .log-result {
-    font-weight: 700;
-    min-width: 32px;
-    text-align: center;
-    padding: 0.1rem 0.3rem;
-    border-radius: 3px;
-    font-size: 0.7rem;
-  }
-  .log-win { background: rgba(46,204,113,0.2); color: var(--green); }
-  .log-loss { background: rgba(231,76,60,0.2); color: var(--red); }
-  .log-live { background: rgba(224,78,57,0.2); color: var(--accent2); }
-  .log-matchup { color: var(--text); flex: 1; }
-  .log-pts { font-weight: 700; min-width: 50px; text-align: right; }
-  .log-pts-pos { color: var(--green); }
-  .log-pts-zero { color: var(--muted); }
-
-  .no-games { text-align: center; color: var(--muted); padding: 2rem; grid-column: 1 / -1; }
-  .error-msg { text-align: center; color: var(--red); padding: 2rem; grid-column: 1 / -1; }
-
-  @media (max-width: 900px) {
-    .games-grid { grid-template-columns: repeat(2, 1fr); }
-  }
-  @media (max-width: 640px) {
-    .header h1 { font-size: 1.4rem; }
-    .standings-table { font-size: 0.85rem; }
-    .standings-table th, .standings-table td { padding: 0.4rem 0.5rem; }
-    .games-grid { grid-template-columns: 1fr; }
-    .tab { padding: 0.4rem 0.7rem; font-size: 0.8rem; }
-  }
+  @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+  .live-dot { animation: pulse-dot 2s infinite; }
+  .live-glow { box-shadow: 0 0 8px rgba(224,78,57,0.3); }
 </style>
 </head>
-<body>
+<body class="bg-navy text-white min-h-screen font-sans">
 
-<div class="header">
-  <h1><span>March Madness</span> Ball Knowers 2026</h1>
-  <div class="subtitle">8 Players &bull; 64 Teams &bull; $25 Buy-in</div>
-  <div class="prizes">1st: $125 &bull; 2nd: $50 &bull; 3rd: $25</div>
+<!-- Header -->
+<div class="text-center py-6 px-4 pb-4 bg-gradient-to-b from-navy-dark to-navy-header border-b-[3px] border-ncaa-blue">
+  <h1 class="text-3xl font-extrabold uppercase tracking-wide">
+    <span class="text-ncaa-blue">March Madness</span> Ball Knowers 2026
+  </h1>
+  <p class="text-mm-muted mt-1 text-sm">8 Players &bull; 64 Teams &bull; $25 Buy-in</p>
+  <p class="text-mm-gold mt-1 text-sm">1st: $125 &bull; 2nd: $50 &bull; 3rd: $25</p>
 </div>
-<div class="update-bar">
-  <span class="live-dot"></span>
+<div class="text-center py-2 text-xs text-mm-muted bg-navy-header border-b border-mm-border">
+  <span class="live-dot inline-block w-2 h-2 bg-mm-green rounded-full mr-1"></span>
   Auto-updates every 30s &bull; Last updated: <span id="lastUpdate">--</span>
 </div>
 
-<div class="container">
-  <div class="standings">
-    <h2 class="section-title">Standings</h2>
-    <table class="standings-table">
+<!-- Main Content -->
+<div class="max-w-[1200px] mx-auto p-4">
+
+  <!-- Standings -->
+  <div class="mb-8">
+    <h2 class="text-xl font-bold text-ncaa-blue uppercase tracking-wide mb-3">Standings</h2>
+    <table class="w-full border-collapse bg-navy-light rounded-lg overflow-hidden border border-mm-border">
       <thead>
-        <tr>
-          <th>#</th>
-          <th>Player</th>
-          <th>Points</th>
-          <th>Teams Alive</th>
+        <tr class="bg-navy-header">
+          <th class="py-2 px-3 text-left text-xs uppercase text-mm-muted tracking-wider">#</th>
+          <th class="py-2 px-3 text-left text-xs uppercase text-mm-muted tracking-wider">Player</th>
+          <th class="py-2 px-3 text-left text-xs uppercase text-mm-muted tracking-wider">Points</th>
+          <th class="py-2 px-3 text-left text-xs uppercase text-mm-muted tracking-wider">Teams Alive</th>
         </tr>
       </thead>
       <tbody id="standingsBody"></tbody>
     </table>
   </div>
 
-  <div class="live-games" id="liveGamesSection">
-    <h2 class="section-title">Today's Games</h2>
-    <div class="games-grid" id="liveGames"><div class="no-games">Loading scores...</div></div>
+  <!-- Today's Games -->
+  <div class="mb-8" id="liveGamesSection">
+    <h2 class="text-xl font-bold text-ncaa-blue uppercase tracking-wide mb-3">Today's Games</h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" id="liveGames">
+      <div class="text-center text-mm-muted py-8 col-span-full">Loading scores...</div>
+    </div>
   </div>
 
-  <h2 class="section-title">Team Details</h2>
-  <div class="tabs" id="playerTabs"></div>
+  <!-- Team Details -->
+  <h2 class="text-xl font-bold text-ncaa-blue uppercase tracking-wide mb-3">Team Details</h2>
+  <div class="flex flex-wrap gap-1 mb-4" id="playerTabs"></div>
   <div id="playerDetails"></div>
 </div>
 
 <script>
 // ==================== DRAFT DATA ====================
-// Each team maps to its ESPN team ID for exact matching.
-// Teams not in the 2025 tournament have id: null (they simply won't match any games).
 const DRAFT = {
   "Nick": [
     { name: "Duke", id: "150" },
@@ -409,7 +163,6 @@ const DRAFT = {
 
 // Build lookup: ESPN team ID -> owner name
 const idToOwner = {};
-// Also track which draft entry each ID maps to: ESPN team ID -> { owner, index }
 const idToDraftEntry = {};
 for (const [owner, teams] of Object.entries(DRAFT)) {
   teams.forEach((t, i) => {
@@ -420,21 +173,18 @@ for (const [owner, teams] of Object.entries(DRAFT)) {
   });
 }
 
-// Find owner by ESPN team ID (extracted from game data)
 function findOwner(espnTeamId) {
   return idToOwner[espnTeamId] || null;
 }
 
 // ==================== STATE ====================
-let allGames = []; // all fetched games
-let playerScores = {}; // player -> { total, teamsAlive, teams: [{name, status, pts, gameInfo}] }
+let allGames = [];
+let playerScores = {};
 let activeTab = null;
 
 // ==================== ESPN API ====================
-// NCAA Men's Basketball Tournament scoreboard
 const ESPN_BASE = "https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard";
 
-// Fetch scores for a given date (YYYYMMDD)
 async function fetchScores(dateStr) {
   const url = `${ESPN_BASE}?dates=${dateStr}&groups=100&limit=200`;
   const resp = await fetch(url);
@@ -443,12 +193,10 @@ async function fetchScores(dateStr) {
   return data.events || [];
 }
 
-// Get tournament dates to check (current tournament window)
 function getTournamentDates() {
   const dates = [];
-  // 2026 NCAA Tournament: March 17 - April 6
-  const start = new Date(2026, 2, 17); // March 17
-  const end = new Date(2026, 3, 7);    // April 7
+  const start = new Date(2026, 2, 17);
+  const end = new Date(2026, 3, 7);
   const today = new Date();
   const endDate = today < end ? today : end;
   for (let d = new Date(start); d <= endDate; d.setDate(d.getDate() + 1)) {
@@ -463,28 +211,21 @@ function getTournamentDates() {
 function parseGame(event) {
   const competition = event.competitions?.[0];
   if (!competition) return null;
-
   const teams = competition.competitors || [];
   if (teams.length < 2) return null;
 
   const homeTeam = teams.find(t => t.homeAway === "home") || teams[0];
   const awayTeam = teams.find(t => t.homeAway === "away") || teams[1];
-
   const status = competition.status || event.status;
   const statusType = status?.type?.name || "STATUS_SCHEDULED";
   const statusDetail = status?.type?.shortDetail || status?.type?.detail || "";
   const clock = status?.displayClock || "";
   const period = status?.period || 0;
-
-  // Detect First Four (play-in) games from notes
   const notes = (competition.notes || []).map(n => n.headline || "").join(" ");
   const isFirstFour = notes.toLowerCase().includes("first four");
 
   return {
-    id: event.id,
-    name: event.name || "",
-    date: event.date,
-    isFirstFour,
+    id: event.id, name: event.name || "", date: event.date, isFirstFour,
     home: {
       teamId: String(homeTeam.team?.id || ""),
       name: homeTeam.team?.displayName || homeTeam.team?.name || "TBD",
@@ -501,10 +242,7 @@ function parseGame(event) {
       seed: awayTeam.curatedRank?.current || "",
       winner: awayTeam.winner || false,
     },
-    status: statusType,
-    statusDetail,
-    clock,
-    period,
+    status: statusType, statusDetail, clock, period,
     isFinal: statusType === "STATUS_FINAL",
     isLive: statusType === "STATUS_IN_PROGRESS",
     isScheduled: statusType === "STATUS_SCHEDULED",
@@ -518,55 +256,36 @@ function calculateScores(games) {
     scores[owner] = { total: 0, teamsAlive: 0, teams: [] };
     for (const t of DRAFT[owner]) {
       scores[owner].teams.push({
-        name: t.name,
-        espnId: t.id,
+        name: t.name, espnId: t.id,
         status: t.id ? "alive" : "not-in-tournament",
-        pts: 0,
-        gameInfo: null,
-        gameHistory: [],  // all games this team has played
+        pts: 0, gameInfo: null, gameHistory: [],
       });
     }
   }
 
-  // For each game, match by ESPN team ID
+  // First pass: determine current status per team (based on most recent game)
   for (const game of games) {
     if (!game) continue;
-
-    // Process each side of the game
     for (const side of ["home", "away"]) {
       const otherSide = side === "home" ? "away" : "home";
       const teamId = game[side].teamId;
       const entry = idToDraftEntry[teamId];
       if (!entry) continue;
-
       const teamEntry = scores[entry.owner].teams[entry.index];
-      // A team can play multiple games in the tournament — accumulate points
-      // but only update status based on most recent game
       const gameDate = new Date(game.date);
       const prevDate = teamEntry.gameInfo ? new Date(teamEntry.gameInfo.date) : null;
-
-      // Only process if this game is newer than the previous one tracked
       if (prevDate && gameDate < prevDate) continue;
-
       teamEntry.gameInfo = game;
       if (game.isFinal) {
-        if (game[side].winner) {
-          const diff = game[side].score - game[otherSide].score;
-          teamEntry.status = "won";
-          // Don't overwrite — accumulate across rounds
-        } else {
-          teamEntry.status = "eliminated";
-        }
+        teamEntry.status = game[side].winner ? "won" : "eliminated";
       } else if (game.isLive) {
         teamEntry.status = "playing";
       }
     }
   }
 
-  // Second pass: calculate points and build game history from ALL games
-  // Sort games by date so history is chronological
+  // Second pass: calculate points and build game history
   const sortedGames = [...games].filter(Boolean).sort((a, b) => new Date(a.date) - new Date(b.date));
-
   for (const game of sortedGames) {
     if (!game.isFinal && !game.isLive) continue;
     for (const side of ["home", "away"]) {
@@ -574,41 +293,28 @@ function calculateScores(games) {
       const teamId = game[side].teamId;
       const entry = idToDraftEntry[teamId];
       if (!entry) continue;
-
       const teamEntry = scores[entry.owner].teams[entry.index];
       const won = game.isFinal ? game[side].winner : (game[side].score > game[otherSide].score);
       const diff = game[side].score - game[otherSide].score;
       const ptsEarned = (game.isFirstFour || !won) ? 0 : (game.isFinal ? diff : Math.max(0, diff));
 
-      // Add to game history
       teamEntry.gameHistory.push({
-        date: game.date,
-        opponent: game[otherSide].shortName,
+        date: game.date, opponent: game[otherSide].shortName,
         opponentSeed: game[otherSide].seed,
-        teamScore: game[side].score,
-        oppScore: game[otherSide].score,
-        won,
-        ptsEarned,
-        isFirstFour: game.isFirstFour,
-        isLive: game.isLive,
-        statusDetail: game.statusDetail,
+        teamScore: game[side].score, oppScore: game[otherSide].score,
+        won, ptsEarned, isFirstFour: game.isFirstFour,
+        isLive: game.isLive, statusDetail: game.statusDetail,
       });
 
-      // Add points (skip First Four)
       if (!game.isFirstFour) {
-        if (game.isFinal && won) {
-          teamEntry.pts += diff;
-        } else if (game.isLive && diff > 0) {
-          teamEntry.pts += diff;
-        }
+        if (game.isFinal && won) teamEntry.pts += diff;
+        else if (game.isLive && diff > 0) teamEntry.pts += diff;
       }
     }
   }
 
-  // Sum up totals
   for (const owner of Object.keys(scores)) {
-    let total = 0;
-    let alive = 0;
+    let total = 0, alive = 0;
     for (const t of scores[owner].teams) {
       total += t.pts;
       if (t.status !== "eliminated" && t.status !== "not-in-tournament") alive++;
@@ -616,7 +322,6 @@ function calculateScores(games) {
     scores[owner].total = total;
     scores[owner].teamsAlive = alive;
   }
-
   return scores;
 }
 
@@ -624,13 +329,14 @@ function calculateScores(games) {
 function renderStandings(scores) {
   const sorted = Object.entries(scores).sort((a, b) => b[1].total - a[1].total);
   const tbody = document.getElementById("standingsBody");
+  const rankColors = { 1: 'text-yellow-400', 2: 'text-gray-400', 3: 'text-amber-600' };
 
   tbody.innerHTML = sorted.map(([name, data], i) => `
-    <tr>
-      <td class="rank rank-${i + 1}">${i + 1}</td>
-      <td class="player-name">${name}</td>
-      <td class="score">${data.total}</td>
-      <td class="teams-alive">${data.teamsAlive} / ${data.teams.length}</td>
+    <tr class="hover:bg-ncaa-blue/10 transition-colors">
+      <td class="py-2 px-3 font-bold w-10 ${rankColors[i+1] || 'text-ncaa-blue'}">${i + 1}</td>
+      <td class="py-2 px-3 font-semibold border-t border-mm-border">${name}</td>
+      <td class="py-2 px-3 font-bold text-lg text-mm-green border-t border-mm-border">${data.total}</td>
+      <td class="py-2 px-3 text-sm text-mm-muted border-t border-mm-border">${data.teamsAlive} / ${data.teams.length}</td>
     </tr>
   `).join("");
 }
@@ -639,11 +345,15 @@ function renderPlayerTabs(scores) {
   const tabs = document.getElementById("playerTabs");
   const sorted = Object.entries(scores).sort((a, b) => b[1].total - a[1].total);
 
-  tabs.innerHTML = sorted.map(([name]) =>
-    `<div class="tab ${activeTab === name ? 'active' : ''}" data-player="${name}">${name}</div>`
-  ).join("");
+  tabs.innerHTML = sorted.map(([name]) => {
+    const isActive = activeTab === name;
+    const cls = isActive
+      ? 'bg-ncaa-blue text-white border-ncaa-blue'
+      : 'bg-navy-light text-mm-muted border-mm-border hover:border-ncaa-blue hover:text-white';
+    return `<div class="py-2 px-4 border rounded-md cursor-pointer text-sm transition-all ${cls}" data-player="${name}">${name}</div>`;
+  }).join("");
 
-  tabs.querySelectorAll(".tab").forEach(tab => {
+  tabs.querySelectorAll("[data-player]").forEach(tab => {
     tab.addEventListener("click", () => {
       activeTab = activeTab === tab.dataset.player ? null : tab.dataset.player;
       renderPlayerTabs(scores);
@@ -654,81 +364,61 @@ function renderPlayerTabs(scores) {
 
 function renderPlayerDetail(scores) {
   const container = document.getElementById("playerDetails");
-  if (!activeTab || !scores[activeTab]) {
-    container.innerHTML = "";
-    return;
-  }
+  if (!activeTab || !scores[activeTab]) { container.innerHTML = ""; return; }
 
   const data = scores[activeTab];
   const teamsSorted = [...data.teams].sort((a, b) => b.pts - a.pts);
 
   container.innerHTML = teamsSorted.map(t => {
-    const eliminatedClass = (t.status === "eliminated" || t.status === "not-in-tournament") ? "eliminated" : "";
+    const dimmed = (t.status === "eliminated" || t.status === "not-in-tournament") ? "opacity-50" : "";
     let statusHtml = "";
-    let gameHtml = "";
 
     if (t.status === "won") {
-      statusHtml = `<span class="pts-earned">+${t.pts} pts</span>`;
-      if (t.gameInfo) {
-        gameHtml = `<div class="game-score">${t.gameInfo.home.name} ${t.gameInfo.home.score} - ${t.gameInfo.away.score} ${t.gameInfo.away.name}</div>`;
-      }
+      statusHtml = `<span class="text-mm-green font-bold">+${t.pts} pts</span>`;
     } else if (t.status === "eliminated") {
       const lifetimePts = t.pts > 0 ? ` (${t.pts} pts)` : "";
-      statusHtml = `<span class="eliminated-tag">Eliminated${lifetimePts}</span>`;
-      if (t.gameInfo) {
-        gameHtml = `<div class="game-score">${t.gameInfo.home.name} ${t.gameInfo.home.score} - ${t.gameInfo.away.score} ${t.gameInfo.away.name}</div>`;
-      }
+      statusHtml = `<span class="text-mm-red text-sm">Eliminated${lifetimePts}</span>`;
     } else if (t.status === "playing") {
-      statusHtml = `<span class="in-progress">LIVE +${t.pts}</span>`;
-      if (t.gameInfo) {
-        const detail = t.gameInfo.statusDetail || `${t.gameInfo.clock} - ${t.gameInfo.period}H`;
-        gameHtml = `<div class="game-score">${t.gameInfo.home.name} ${t.gameInfo.home.score} - ${t.gameInfo.away.score} ${t.gameInfo.away.name} (${detail})</div>`;
-      }
+      statusHtml = `<span class="text-ncaa-red text-sm">LIVE +${t.pts}</span>`;
     } else if (t.status === "not-in-tournament") {
-      statusHtml = `<span style="color:var(--muted);font-size:0.85rem;">Not in Tournament</span>`;
+      statusHtml = `<span class="text-mm-muted text-sm">Not in Tournament</span>`;
     } else {
-      statusHtml = `<span style="color:var(--green);font-size:0.85rem;">Active</span>`;
+      statusHtml = `<span class="text-mm-green text-sm">Active</span>`;
     }
 
-    // Build game log rows
     let gameLogHtml = "";
     if (t.gameHistory.length > 0) {
       const rows = t.gameHistory.map(g => {
         const result = g.isLive ? "LIVE" : (g.won ? "W" : "L");
-        const resultClass = g.isLive ? "log-live" : (g.won ? "log-win" : "log-loss");
-        const ptsClass = g.ptsEarned > 0 ? "log-pts-pos" : "log-pts-zero";
+        const rBg = g.isLive ? 'bg-ncaa-red/20 text-ncaa-red' : (g.won ? 'bg-mm-green/20 text-mm-green' : 'bg-mm-red/20 text-mm-red');
+        const ptsColor = g.ptsEarned > 0 ? 'text-mm-green' : 'text-mm-muted';
         const ptsLabel = g.isFirstFour ? "Play-in" : (g.ptsEarned > 0 ? `+${g.ptsEarned}` : "0");
         const dateStr = new Date(g.date).toLocaleDateString([], { month: 'short', day: 'numeric' });
         const liveDetail = g.isLive ? ` (${g.statusDetail || 'LIVE'})` : "";
         return `
-          <div class="game-log-row">
-            <span class="log-date">${dateStr}</span>
-            <span class="log-result ${resultClass}">${result}</span>
-            <span class="log-matchup">${g.teamScore}-${g.oppScore} vs ${g.opponentSeed ? '(' + g.opponentSeed + ') ' : ''}${g.opponent}${liveDetail}</span>
-            <span class="log-pts ${ptsClass}">${ptsLabel}</span>
+          <div class="flex items-center gap-2 py-0.5 text-xs">
+            <span class="text-mm-muted min-w-[50px]">${dateStr}</span>
+            <span class="font-bold min-w-[32px] text-center px-1 py-0.5 rounded text-[0.65rem] ${rBg}">${result}</span>
+            <span class="flex-1">${g.teamScore}-${g.oppScore} vs ${g.opponentSeed ? '(' + g.opponentSeed + ') ' : ''}${g.opponent}${liveDetail}</span>
+            <span class="font-bold min-w-[50px] text-right ${ptsColor}">${ptsLabel}</span>
           </div>`;
       }).join("");
-      gameLogHtml = `<div class="game-log">${rows}</div>`;
+      gameLogHtml = `<div class="mt-2 pt-2 border-t border-mm-border">${rows}</div>`;
     }
 
     return `
-      <div class="team-card ${eliminatedClass}">
-        <div class="team-card-header">
-          <span class="team-name">${t.name}</span>
-          <div class="team-status">
-            ${statusHtml}
-          </div>
+      <div class="bg-navy-light border border-mm-border rounded-lg p-3 mb-2 ${dimmed}">
+        <div class="flex justify-between items-center">
+          <span class="font-semibold">${t.name}</span>
+          <div>${statusHtml}</div>
         </div>
         ${gameLogHtml}
-      </div>
-    `;
+      </div>`;
   }).join("");
 }
 
 function renderLiveGames(games) {
   const container = document.getElementById("liveGames");
-
-  // Show today's games and any live games
   const now = new Date();
   const todayStr = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
 
@@ -739,18 +429,15 @@ function renderLiveGames(games) {
     return gStr === todayStr || g.isLive;
   });
 
-  // If no today's games, show most recent completed games
   const displayGames = todaysGames.length > 0 ? todaysGames :
     games.filter(g => g && g.isFinal).slice(-10);
 
   if (displayGames.length === 0) {
-    container.innerHTML = '<div class="no-games">No games today. Check back on game day!</div>';
+    container.innerHTML = '<div class="text-center text-mm-muted py-8 col-span-full">No games today. Check back on game day!</div>';
     return;
   }
 
-  // Sort: live first, then upcoming, then final
   displayGames.sort((a, b) => {
-    const order = { playing: 0, live: 0, scheduled: 1, final: 2 };
     const aO = a.isLive ? 0 : a.isScheduled ? 1 : 2;
     const bO = b.isLive ? 0 : b.isScheduled ? 1 : 2;
     return aO - bO;
@@ -759,56 +446,53 @@ function renderLiveGames(games) {
   container.innerHTML = displayGames.map(g => {
     let statusBadge = "";
     let pointsWidget = "";
+
     if (g.isLive) {
-      statusBadge = `<span class="game-status-badge status-live">${g.statusDetail || 'LIVE'}</span>`;
+      statusBadge = `<span class="inline-block px-2 py-0.5 rounded text-[0.65rem] font-semibold uppercase bg-ncaa-red/20 text-ncaa-red">${g.statusDetail || 'LIVE'}</span>`;
     } else if (g.isFinal) {
-      statusBadge = `<span class="game-status-badge status-final">Final</span>`;
-      // Build points widget showing who got points from this game
+      statusBadge = `<span class="inline-block px-2 py-0.5 rounded text-[0.65rem] font-semibold uppercase bg-mm-muted/15 text-mm-muted">Final</span>`;
       if (!g.isFirstFour) {
         const winnerSide = g.home.winner ? "home" : "away";
         const winnerOwner = findOwner(g[winnerSide].teamId);
         const margin = Math.abs(g.home.score - g.away.score);
         if (winnerOwner) {
-          pointsWidget = `<div class="tile-pts-widget"><span class="owner-tag">${winnerOwner}</span> <span class="tile-pts-value">+${margin}</span></div>`;
+          pointsWidget = `<span class="inline-flex items-center gap-1 ml-2 text-xs"><span class="px-1 py-0.5 rounded bg-ncaa-blue/20 text-ncaa-blue text-[0.6rem]">${winnerOwner}</span><span class="text-mm-green font-bold">+${margin}</span></span>`;
         }
       }
     } else {
       const gameTime = new Date(g.date).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-      statusBadge = `<span class="game-status-badge status-upcoming">${gameTime}</span>`;
+      statusBadge = `<span class="inline-block px-2 py-0.5 rounded text-[0.65rem] font-semibold uppercase bg-ncaa-blue/15 text-ncaa-blue">${gameTime}</span>`;
     }
 
     const homeOwner = findOwner(g.home.teamId);
     const awayOwner = findOwner(g.away.teamId);
-    const homeOwnerTag = homeOwner ? `<span class="owner-tag">${homeOwner}</span>` : "";
-    const awayOwnerTag = awayOwner ? `<span class="owner-tag">${awayOwner}</span>` : "";
+    const ownerTag = (name) => name ? `<span class="px-1 py-0.5 rounded bg-ncaa-blue/20 text-ncaa-blue text-[0.6rem]">${name}</span>` : "";
 
-    const homeClass = g.isFinal ? (g.home.winner ? "winner" : "loser") : "";
-    const awayClass = g.isFinal ? (g.away.winner ? "winner" : "loser") : "";
-
+    const homeClass = g.isFinal ? (g.home.winner ? "text-mm-green" : "text-mm-muted opacity-60") : "";
+    const awayClass = g.isFinal ? (g.away.winner ? "text-mm-green" : "text-mm-muted opacity-60") : "";
     const showScores = g.isLive || g.isFinal;
-    const tileClass = g.isLive ? "game-tile live-game" : "game-tile";
+    const tileExtra = g.isLive ? "border-ncaa-red live-glow" : "border-mm-border";
 
     return `
-      <div class="${tileClass}">
-        <div class="game-tile-status">${statusBadge}${pointsWidget}</div>
-        <div class="game-tile-row">
-          <div class="tile-team ${awayClass}">
-            <span class="tile-seed">${g.away.seed || ''}</span>
+      <div class="bg-navy-light border ${tileExtra} rounded-lg p-3 flex flex-col gap-2">
+        <div class="text-center mb-1">${statusBadge}${pointsWidget}</div>
+        <div class="flex justify-between items-center py-0.5">
+          <div class="font-semibold text-sm flex items-center gap-1.5 ${awayClass}">
+            <span class="text-mm-muted text-xs font-normal">${g.away.seed || ''}</span>
             ${g.away.shortName}
-            ${awayOwnerTag}
+            ${ownerTag(awayOwner)}
           </div>
-          ${showScores ? `<div class="tile-score ${awayClass}">${g.away.score}</div>` : ""}
+          ${showScores ? `<div class="font-bold text-base ${awayClass}">${g.away.score}</div>` : ""}
         </div>
-        <div class="game-tile-row">
-          <div class="tile-team ${homeClass}">
-            <span class="tile-seed">${g.home.seed || ''}</span>
+        <div class="flex justify-between items-center py-0.5">
+          <div class="font-semibold text-sm flex items-center gap-1.5 ${homeClass}">
+            <span class="text-mm-muted text-xs font-normal">${g.home.seed || ''}</span>
             ${g.home.shortName}
-            ${homeOwnerTag}
+            ${ownerTag(homeOwner)}
           </div>
-          ${showScores ? `<div class="tile-score ${homeClass}">${g.home.score}</div>` : ""}
+          ${showScores ? `<div class="font-bold text-base ${homeClass}">${g.home.score}</div>` : ""}
         </div>
-      </div>
-    `;
+      </div>`;
   }).join("");
 }
 
@@ -816,26 +500,16 @@ function renderLiveGames(games) {
 async function loadAllScores() {
   const dates = getTournamentDates();
   const allEvents = [];
-
-  // Fetch all dates in parallel (batch of 5)
   for (let i = 0; i < dates.length; i += 5) {
     const batch = dates.slice(i, i + 5);
     const results = await Promise.all(batch.map(d => fetchScores(d).catch(() => [])));
-    for (const events of results) {
-      allEvents.push(...events);
-    }
+    for (const events of results) allEvents.push(...events);
   }
-
-  // Deduplicate by event ID
   const seen = new Set();
   const unique = [];
   for (const e of allEvents) {
-    if (!seen.has(e.id)) {
-      seen.add(e.id);
-      unique.push(e);
-    }
+    if (!seen.has(e.id)) { seen.add(e.id); unique.push(e); }
   }
-
   return unique.map(parseGame).filter(Boolean);
 }
 
@@ -843,21 +517,18 @@ async function refresh() {
   try {
     allGames = await loadAllScores();
     playerScores = calculateScores(allGames);
-
     renderStandings(playerScores);
     renderPlayerTabs(playerScores);
     renderPlayerDetail(playerScores);
     renderLiveGames(allGames);
-
     document.getElementById("lastUpdate").textContent = new Date().toLocaleTimeString();
   } catch (err) {
     console.error("Refresh error:", err);
     document.getElementById("liveGames").innerHTML =
-      `<div class="error-msg">Error loading scores. Will retry in 30s. (${err.message})</div>`;
+      `<div class="text-center text-mm-red py-8 col-span-full">Error loading scores. Will retry in 30s. (${err.message})</div>`;
   }
 }
 
-// Initial load + auto-refresh
 refresh();
 setInterval(refresh, 30000);
 </script>
