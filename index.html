@@ -10,9 +10,12 @@ tailwind.config = {
   theme: {
     extend: {
       colors: {
-        navy: { DEFAULT: '#0a2240', light: '#0d2d5e', dark: '#001a38', header: '#002b5c' },
-        ncaa: { blue: '#009cde', red: '#e04e39' },
-        mm: { green: '#2ecc71', red: '#e74c3c', gold: '#f5c518', muted: '#8fadc8', border: '#1a4a7a' },
+        page: '#F7F8F0',
+        card: '#ffffff',
+        dark: { DEFAULT: '#355872', light: '#3d6585' },
+        mid: '#7AAACE',
+        lite: '#9CD5FF',
+        mm: { green: '#16a34a', red: '#dc2626', muted: '#7AAACE', border: '#9CD5FF', accent: '#355872' },
       }
     }
   }
@@ -21,22 +24,22 @@ tailwind.config = {
 <style>
   @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
   .live-dot { animation: pulse-dot 2s infinite; }
-  .live-glow { box-shadow: 0 0 8px rgba(224,78,57,0.3); }
+  .live-glow { box-shadow: 0 0 8px rgba(220,38,38,0.25); }
 </style>
 </head>
-<body class="bg-navy text-white min-h-screen font-sans">
+<body class="bg-page text-dark min-h-screen font-sans">
 
 <!-- Header -->
-<div class="text-center py-6 px-4 pb-4 bg-gradient-to-b from-navy-dark to-navy-header border-b-[3px] border-ncaa-blue">
-  <h1 class="text-3xl font-extrabold uppercase tracking-wide">
-    <span class="text-ncaa-blue">March Madness</span> Ball Knowers 2026
+<div class="text-center py-6 px-4 pb-4 bg-dark border-b-[3px] border-mid">
+  <h1 class="text-3xl font-extrabold uppercase tracking-wide text-white">
+    <span class="text-lite">March Madness</span> Ball Knowers 2026
   </h1>
-  <p class="text-mm-muted mt-1 text-sm">8 Players &bull; 64 Teams &bull; $25 Buy-in</p>
-  <p class="text-mm-gold mt-1 text-sm">1st: $125 &bull; 2nd: $50 &bull; 3rd: $25</p>
+  <p class="text-mid mt-1 text-sm">8 Players &bull; 64 Teams &bull; $25 Buy-in</p>
+  <p class="text-lite mt-1 text-sm">1st: $125 &bull; 2nd: $50 &bull; 3rd: $25</p>
 </div>
-<div class="text-center py-2 text-xs text-mm-muted bg-navy-header border-b border-mm-border">
+<div class="text-center py-2 text-xs text-mm-muted bg-dark-light border-b border-mid">
   <span class="live-dot inline-block w-2 h-2 bg-mm-green rounded-full mr-1"></span>
-  Auto-updates every 30s &bull; Last updated: <span id="lastUpdate">--</span>
+  <span class="text-white/70">Auto-updates every 30s &bull; Last updated: <span id="lastUpdate">--</span></span>
 </div>
 
 <!-- Main Content -->
@@ -44,14 +47,14 @@ tailwind.config = {
 
   <!-- Standings -->
   <div class="mb-8">
-    <h2 class="text-xl font-bold text-ncaa-blue uppercase tracking-wide mb-3">Standings</h2>
-    <table class="w-full border-collapse bg-navy-light rounded-lg overflow-hidden border border-mm-border">
+    <h2 class="text-xl font-bold text-dark uppercase tracking-wide mb-3">Standings</h2>
+    <table class="w-full border-collapse bg-card rounded-lg overflow-hidden border border-mm-border shadow-sm">
       <thead>
-        <tr class="bg-navy-header">
-          <th class="py-2 px-3 text-left text-xs uppercase text-mm-muted tracking-wider">#</th>
-          <th class="py-2 px-3 text-left text-xs uppercase text-mm-muted tracking-wider">Player</th>
-          <th class="py-2 px-3 text-left text-xs uppercase text-mm-muted tracking-wider">Points</th>
-          <th class="py-2 px-3 text-left text-xs uppercase text-mm-muted tracking-wider">Teams Alive</th>
+        <tr class="bg-dark">
+          <th class="py-2 px-3 text-left text-xs uppercase text-lite tracking-wider">#</th>
+          <th class="py-2 px-3 text-left text-xs uppercase text-lite tracking-wider">Player</th>
+          <th class="py-2 px-3 text-left text-xs uppercase text-lite tracking-wider">Points</th>
+          <th class="py-2 px-3 text-left text-xs uppercase text-lite tracking-wider">Teams Alive</th>
         </tr>
       </thead>
       <tbody id="standingsBody"></tbody>
@@ -60,14 +63,14 @@ tailwind.config = {
 
   <!-- Today's Games -->
   <div class="mb-8" id="liveGamesSection">
-    <h2 class="text-xl font-bold text-ncaa-blue uppercase tracking-wide mb-3">Today's Games</h2>
+    <h2 class="text-xl font-bold text-dark uppercase tracking-wide mb-3">Today's Games</h2>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" id="liveGames">
-      <div class="text-center text-mm-muted py-8 col-span-full">Loading scores...</div>
+      <div class="text-center text-mid py-8 col-span-full">Loading scores...</div>
     </div>
   </div>
 
   <!-- Team Details -->
-  <h2 class="text-xl font-bold text-ncaa-blue uppercase tracking-wide mb-3">Team Details</h2>
+  <h2 class="text-xl font-bold text-dark uppercase tracking-wide mb-3">Team Details</h2>
   <div class="flex flex-wrap gap-1 mb-4" id="playerTabs"></div>
   <div id="playerDetails"></div>
 </div>
@@ -329,14 +332,14 @@ function calculateScores(games) {
 function renderStandings(scores) {
   const sorted = Object.entries(scores).sort((a, b) => b[1].total - a[1].total);
   const tbody = document.getElementById("standingsBody");
-  const rankColors = { 1: 'text-yellow-400', 2: 'text-gray-400', 3: 'text-amber-600' };
+  const rankColors = { 1: 'text-yellow-500', 2: 'text-gray-400', 3: 'text-amber-700' };
 
   tbody.innerHTML = sorted.map(([name, data], i) => `
-    <tr class="hover:bg-ncaa-blue/10 transition-colors">
-      <td class="py-2 px-3 font-bold w-10 ${rankColors[i+1] || 'text-ncaa-blue'}">${i + 1}</td>
-      <td class="py-2 px-3 font-semibold border-t border-mm-border">${name}</td>
+    <tr class="hover:bg-lite/30 transition-colors">
+      <td class="py-2 px-3 font-bold w-10 ${rankColors[i+1] || 'text-dark'}">${i + 1}</td>
+      <td class="py-2 px-3 font-semibold border-t border-mm-border text-dark">${name}</td>
       <td class="py-2 px-3 font-bold text-lg text-mm-green border-t border-mm-border">${data.total}</td>
-      <td class="py-2 px-3 text-sm text-mm-muted border-t border-mm-border">${data.teamsAlive} / ${data.teams.length}</td>
+      <td class="py-2 px-3 text-sm text-mid border-t border-mm-border">${data.teamsAlive} / ${data.teams.length}</td>
     </tr>
   `).join("");
 }
@@ -348,8 +351,8 @@ function renderPlayerTabs(scores) {
   tabs.innerHTML = sorted.map(([name]) => {
     const isActive = activeTab === name;
     const cls = isActive
-      ? 'bg-ncaa-blue text-white border-ncaa-blue'
-      : 'bg-navy-light text-mm-muted border-mm-border hover:border-ncaa-blue hover:text-white';
+      ? 'bg-dark text-white border-dark'
+      : 'bg-card text-mid border-mm-border hover:border-dark hover:text-dark';
     return `<div class="py-2 px-4 border rounded-md cursor-pointer text-sm transition-all ${cls}" data-player="${name}">${name}</div>`;
   }).join("");
 
@@ -379,9 +382,9 @@ function renderPlayerDetail(scores) {
       const lifetimePts = t.pts > 0 ? ` (${t.pts} pts)` : "";
       statusHtml = `<span class="text-mm-red text-sm">Eliminated${lifetimePts}</span>`;
     } else if (t.status === "playing") {
-      statusHtml = `<span class="text-ncaa-red text-sm">LIVE +${t.pts}</span>`;
+      statusHtml = `<span class="text-mm-red text-sm font-semibold">LIVE +${t.pts}</span>`;
     } else if (t.status === "not-in-tournament") {
-      statusHtml = `<span class="text-mm-muted text-sm">Not in Tournament</span>`;
+      statusHtml = `<span class="text-mid text-sm">Not in Tournament</span>`;
     } else {
       statusHtml = `<span class="text-mm-green text-sm">Active</span>`;
     }
@@ -390,24 +393,24 @@ function renderPlayerDetail(scores) {
     if (t.gameHistory.length > 0) {
       const rows = t.gameHistory.map(g => {
         const result = g.isLive ? "LIVE" : (g.won ? "W" : "L");
-        const rBg = g.isLive ? 'bg-ncaa-red/20 text-ncaa-red' : (g.won ? 'bg-mm-green/20 text-mm-green' : 'bg-mm-red/20 text-mm-red');
-        const ptsColor = g.ptsEarned > 0 ? 'text-mm-green' : 'text-mm-muted';
+        const rBg = g.isLive ? 'bg-mm-red/10 text-mm-red' : (g.won ? 'bg-mm-green/10 text-mm-green' : 'bg-mm-red/10 text-mm-red');
+        const ptsColor = g.ptsEarned > 0 ? 'text-mm-green' : 'text-mid';
         const ptsLabel = g.isFirstFour ? "Play-in" : (g.ptsEarned > 0 ? `+${g.ptsEarned}` : "0");
         const dateStr = new Date(g.date).toLocaleDateString([], { month: 'short', day: 'numeric' });
         const liveDetail = g.isLive ? ` (${g.statusDetail || 'LIVE'})` : "";
         return `
           <div class="flex items-center gap-2 py-0.5 text-xs">
-            <span class="text-mm-muted min-w-[50px]">${dateStr}</span>
+            <span class="text-mid min-w-[50px]">${dateStr}</span>
             <span class="font-bold min-w-[32px] text-center px-1 py-0.5 rounded text-[0.65rem] ${rBg}">${result}</span>
             <span class="flex-1">${g.teamScore}-${g.oppScore} vs ${g.opponentSeed ? '(' + g.opponentSeed + ') ' : ''}${g.opponent}${liveDetail}</span>
             <span class="font-bold min-w-[50px] text-right ${ptsColor}">${ptsLabel}</span>
           </div>`;
       }).join("");
-      gameLogHtml = `<div class="mt-2 pt-2 border-t border-mm-border">${rows}</div>`;
+      gameLogHtml = `<div class="mt-2 pt-2 border-t border-lite">${rows}</div>`;
     }
 
     return `
-      <div class="bg-navy-light border border-mm-border rounded-lg p-3 mb-2 ${dimmed}">
+      <div class="bg-card border border-lite rounded-lg p-3 mb-2 shadow-sm ${dimmed}">
         <div class="flex justify-between items-center">
           <span class="font-semibold">${t.name}</span>
           <div>${statusHtml}</div>
@@ -433,7 +436,7 @@ function renderLiveGames(games) {
     games.filter(g => g && g.isFinal).slice(-10);
 
   if (displayGames.length === 0) {
-    container.innerHTML = '<div class="text-center text-mm-muted py-8 col-span-full">No games today. Check back on game day!</div>';
+    container.innerHTML = '<div class="text-center text-mid py-8 col-span-full">No games today. Check back on game day!</div>';
     return;
   }
 
@@ -448,37 +451,37 @@ function renderLiveGames(games) {
     let pointsWidget = "";
 
     if (g.isLive) {
-      statusBadge = `<span class="inline-block px-2 py-0.5 rounded text-[0.65rem] font-semibold uppercase bg-ncaa-red/20 text-ncaa-red">${g.statusDetail || 'LIVE'}</span>`;
+      statusBadge = `<span class="inline-block px-2 py-0.5 rounded text-[0.65rem] font-semibold uppercase bg-mm-red/10 text-mm-red">${g.statusDetail || 'LIVE'}</span>`;
     } else if (g.isFinal) {
-      statusBadge = `<span class="inline-block px-2 py-0.5 rounded text-[0.65rem] font-semibold uppercase bg-mm-muted/15 text-mm-muted">Final</span>`;
+      statusBadge = `<span class="inline-block px-2 py-0.5 rounded text-[0.65rem] font-semibold uppercase bg-mid/15 text-mid">Final</span>`;
       if (!g.isFirstFour) {
         const winnerSide = g.home.winner ? "home" : "away";
         const winnerOwner = findOwner(g[winnerSide].teamId);
         const margin = Math.abs(g.home.score - g.away.score);
         if (winnerOwner) {
-          pointsWidget = `<span class="inline-flex items-center gap-1 ml-2 text-xs"><span class="px-1 py-0.5 rounded bg-ncaa-blue/20 text-ncaa-blue text-[0.6rem]">${winnerOwner}</span><span class="text-mm-green font-bold">+${margin}</span></span>`;
+          pointsWidget = `<span class="inline-flex items-center gap-1 ml-2 text-xs"><span class="px-1 py-0.5 rounded bg-dark/10 text-dark text-[0.6rem]">${winnerOwner}</span><span class="text-mm-green font-bold">+${margin}</span></span>`;
         }
       }
     } else {
       const gameTime = new Date(g.date).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-      statusBadge = `<span class="inline-block px-2 py-0.5 rounded text-[0.65rem] font-semibold uppercase bg-ncaa-blue/15 text-ncaa-blue">${gameTime}</span>`;
+      statusBadge = `<span class="inline-block px-2 py-0.5 rounded text-[0.65rem] font-semibold uppercase bg-dark/10 text-dark">${gameTime}</span>`;
     }
 
     const homeOwner = findOwner(g.home.teamId);
     const awayOwner = findOwner(g.away.teamId);
-    const ownerTag = (name) => name ? `<span class="px-1 py-0.5 rounded bg-ncaa-blue/20 text-ncaa-blue text-[0.6rem]">${name}</span>` : "";
+    const ownerTag = (name) => name ? `<span class="px-1 py-0.5 rounded bg-dark/10 text-dark text-[0.6rem]">${name}</span>` : "";
 
-    const homeClass = g.isFinal ? (g.home.winner ? "text-mm-green" : "text-mm-muted opacity-60") : "";
-    const awayClass = g.isFinal ? (g.away.winner ? "text-mm-green" : "text-mm-muted opacity-60") : "";
+    const homeClass = g.isFinal ? (g.home.winner ? "text-mm-green" : "text-mid opacity-60") : "";
+    const awayClass = g.isFinal ? (g.away.winner ? "text-mm-green" : "text-mid opacity-60") : "";
     const showScores = g.isLive || g.isFinal;
-    const tileExtra = g.isLive ? "border-ncaa-red live-glow" : "border-mm-border";
+    const tileExtra = g.isLive ? "border-mm-red live-glow" : "border-lite";
 
     return `
-      <div class="bg-navy-light border ${tileExtra} rounded-lg p-3 flex flex-col gap-2">
+      <div class="bg-card border ${tileExtra} rounded-lg p-3 flex flex-col gap-2 shadow-sm">
         <div class="text-center mb-1">${statusBadge}${pointsWidget}</div>
         <div class="flex justify-between items-center py-0.5">
           <div class="font-semibold text-sm flex items-center gap-1.5 ${awayClass}">
-            <span class="text-mm-muted text-xs font-normal">${g.away.seed || ''}</span>
+            <span class="text-mid text-xs font-normal">${g.away.seed || ''}</span>
             ${g.away.shortName}
             ${ownerTag(awayOwner)}
           </div>
@@ -486,7 +489,7 @@ function renderLiveGames(games) {
         </div>
         <div class="flex justify-between items-center py-0.5">
           <div class="font-semibold text-sm flex items-center gap-1.5 ${homeClass}">
-            <span class="text-mm-muted text-xs font-normal">${g.home.seed || ''}</span>
+            <span class="text-mid text-xs font-normal">${g.home.seed || ''}</span>
             ${g.home.shortName}
             ${ownerTag(homeOwner)}
           </div>
@@ -525,7 +528,7 @@ async function refresh() {
   } catch (err) {
     console.error("Refresh error:", err);
     document.getElementById("liveGames").innerHTML =
-      `<div class="text-center text-mm-red py-8 col-span-full">Error loading scores. Will retry in 30s. (${err.message})</div>`;
+      `<div class="text-center text-mm-red py-8 col-span-full">Error loading scores. Retrying in 30s. (${err.message})</div>`;
   }
 }
 
