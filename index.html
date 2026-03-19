@@ -405,10 +405,15 @@ function parseGame(event) {
   const clock = status?.displayClock || "";
   const period = status?.period || 0;
 
+  // Detect First Four (play-in) games from notes
+  const notes = (competition.notes || []).map(n => n.headline || "").join(" ");
+  const isFirstFour = notes.toLowerCase().includes("first four");
+
   return {
     id: event.id,
     name: event.name || "",
     date: event.date,
+    isFirstFour,
     home: {
       teamId: String(homeTeam.team?.id || ""),
       name: homeTeam.team?.displayName || homeTeam.team?.name || "TBD",
@@ -487,8 +492,9 @@ function calculateScores(games) {
   }
 
   // Second pass: calculate points from ALL games (not just most recent)
+  // Skip First Four (play-in) games — no points awarded for those
   for (const game of games) {
-    if (!game || !game.isFinal) continue;
+    if (!game || !game.isFinal || game.isFirstFour) continue;
     for (const side of ["home", "away"]) {
       const otherSide = side === "home" ? "away" : "home";
       const teamId = game[side].teamId;
@@ -502,8 +508,9 @@ function calculateScores(games) {
   }
 
   // Also add live game points (potential, not finalized)
+  // Skip First Four games here too
   for (const game of games) {
-    if (!game || !game.isLive) continue;
+    if (!game || !game.isLive || game.isFirstFour) continue;
     for (const side of ["home", "away"]) {
       const otherSide = side === "home" ? "away" : "home";
       const teamId = game[side].teamId;
