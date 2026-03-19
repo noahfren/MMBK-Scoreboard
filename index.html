@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>March Madness Pool Scoreboard</title>
+<title>March Madness Ball Knowers 2026</title>
 <style>
   :root {
     --bg: #0a2240;
@@ -281,7 +281,7 @@
 <body>
 
 <div class="header">
-  <h1><span>March Madness</span> Pool 2026</h1>
+  <h1><span>March Madness</span> Ball Knowers 2026</h1>
   <div class="subtitle">8 Players &bull; 64 Teams &bull; $25 Buy-in</div>
   <div class="prizes">1st: $125 &bull; 2nd: $50 &bull; 3rd: $25</div>
 </div>
@@ -300,7 +300,6 @@
           <th>Player</th>
           <th>Points</th>
           <th>Teams Alive</th>
-          <th>Prize</th>
         </tr>
       </thead>
       <tbody id="standingsBody"></tbody>
@@ -625,7 +624,6 @@ function calculateScores(games) {
 function renderStandings(scores) {
   const sorted = Object.entries(scores).sort((a, b) => b[1].total - a[1].total);
   const tbody = document.getElementById("standingsBody");
-  const prizes = ["$125", "$50", "$25"];
 
   tbody.innerHTML = sorted.map(([name, data], i) => `
     <tr>
@@ -633,7 +631,6 @@ function renderStandings(scores) {
       <td class="player-name">${name}</td>
       <td class="score">${data.total}</td>
       <td class="teams-alive">${data.teamsAlive} / ${data.teams.length}</td>
-      <td class="money">${prizes[i] || ""}</td>
     </tr>
   `).join("");
 }
