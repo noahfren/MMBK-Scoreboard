@@ -247,7 +247,7 @@ function parseGame(event) {
     },
     status: statusType, statusDetail, clock, period,
     isFinal: statusType === "STATUS_FINAL",
-    isLive: statusType === "STATUS_IN_PROGRESS",
+    isLive: statusType === "STATUS_IN_PROGRESS" || statusType === "STATUS_HALFTIME",
     isScheduled: statusType === "STATUS_SCHEDULED",
   };
 }
@@ -311,7 +311,6 @@ function calculateScores(games) {
 
       if (!game.isFirstFour) {
         if (game.isFinal && won) teamEntry.pts += diff;
-        else if (game.isLive && diff > 0) teamEntry.pts += diff;
       }
     }
   }
