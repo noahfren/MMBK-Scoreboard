@@ -6,15 +6,17 @@
 <title>March Madness Pool Scoreboard</title>
 <style>
   :root {
-    --bg: #0a0e1a;
-    --card: #141a2e;
-    --accent: #ff6b35;
-    --accent2: #f7c948;
-    --green: #34d399;
-    --red: #f87171;
-    --text: #e2e8f0;
-    --muted: #64748b;
-    --border: #1e293b;
+    --bg: #0a2240;
+    --card: #0d2d5e;
+    --accent: #009cde;
+    --accent2: #e04e39;
+    --green: #2ecc71;
+    --red: #e74c3c;
+    --gold: #f5c518;
+    --text: #ffffff;
+    --muted: #8fadc8;
+    --border: #1a4a7a;
+    --header-bg: #002b5c;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
@@ -25,29 +27,30 @@
   }
   .header {
     text-align: center;
-    padding: 2rem 1rem 1rem;
-    background: linear-gradient(135deg, #1a1a2e, #16213e);
-    border-bottom: 2px solid var(--accent);
+    padding: 1.5rem 1rem 1rem;
+    background: linear-gradient(180deg, #001a38, var(--header-bg));
+    border-bottom: 3px solid var(--accent);
   }
   .header h1 {
     font-size: 2rem;
-    background: linear-gradient(90deg, var(--accent), var(--accent2));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #fff;
   }
+  .header h1 span { color: var(--accent); }
   .header .subtitle { color: var(--muted); margin-top: 0.25rem; font-size: 0.9rem; }
   .header .prizes {
     margin-top: 0.5rem;
     font-size: 0.85rem;
-    color: var(--accent2);
+    color: var(--gold);
   }
   .update-bar {
     text-align: center;
     padding: 0.5rem;
     font-size: 0.8rem;
     color: var(--muted);
-    background: var(--card);
+    background: var(--header-bg);
     border-bottom: 1px solid var(--border);
   }
   .update-bar .live-dot {
@@ -63,23 +66,27 @@
     50% { opacity: 0.3; }
   }
   .container { max-width: 1200px; margin: 0 auto; padding: 1rem; }
+  .section-title {
+    font-size: 1.3rem;
+    margin-bottom: 0.75rem;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    font-weight: 700;
+  }
 
   /* Standings */
   .standings { margin-bottom: 2rem; }
-  .standings h2 {
-    font-size: 1.3rem;
-    margin-bottom: 0.75rem;
-    color: var(--accent2);
-  }
   .standings-table {
     width: 100%;
     border-collapse: collapse;
     background: var(--card);
     border-radius: 8px;
     overflow: hidden;
+    border: 1px solid var(--border);
   }
   .standings-table th {
-    background: #1e293b;
+    background: var(--header-bg);
     padding: 0.6rem 0.75rem;
     text-align: left;
     font-size: 0.8rem;
@@ -92,7 +99,7 @@
     border-top: 1px solid var(--border);
     font-size: 0.95rem;
   }
-  .standings-table tr:hover { background: rgba(255,107,53,0.05); }
+  .standings-table tr:hover { background: rgba(0,156,222,0.08); }
   .rank { font-weight: 700; color: var(--accent); width: 40px; }
   .rank-1 { color: #ffd700; }
   .rank-2 { color: #c0c0c0; }
@@ -100,7 +107,75 @@
   .player-name { font-weight: 600; }
   .score { font-weight: 700; font-size: 1.1rem; color: var(--green); }
   .teams-alive { color: var(--muted); font-size: 0.85rem; }
-  .money { color: var(--accent2); font-weight: 600; }
+  .money { color: var(--gold); font-weight: 600; }
+
+  /* Today's Games - Tile Grid */
+  .live-games { margin-bottom: 2rem; }
+  .games-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+  }
+  .game-tile {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .game-tile.live-game { border-color: var(--accent2); box-shadow: 0 0 8px rgba(224,78,57,0.3); }
+  .game-tile .game-tile-status {
+    text-align: center;
+    margin-bottom: 0.25rem;
+  }
+  .game-tile .game-tile-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.2rem 0;
+  }
+  .game-tile .tile-team {
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  .game-tile .tile-seed {
+    color: var(--muted);
+    font-size: 0.75rem;
+    font-weight: 400;
+  }
+  .game-tile .tile-score {
+    font-weight: 700;
+    font-size: 1.05rem;
+    min-width: 28px;
+    text-align: right;
+  }
+  .game-tile .tile-team.winner { color: var(--green); }
+  .game-tile .tile-team.loser { color: var(--muted); opacity: 0.6; }
+  .game-tile .tile-score.winner { color: var(--green); }
+  .game-tile .tile-score.loser { color: var(--muted); opacity: 0.6; }
+  .game-status-badge {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  .status-live { background: rgba(224,78,57,0.2); color: var(--accent2); }
+  .status-final { background: rgba(143,173,200,0.15); color: var(--muted); }
+  .status-upcoming { background: rgba(0,156,222,0.15); color: var(--accent); }
+  .owner-tag {
+    font-size: 0.65rem;
+    padding: 0.1rem 0.35rem;
+    border-radius: 3px;
+    background: rgba(0,156,222,0.2);
+    color: var(--accent);
+  }
 
   /* Tabs */
   .tabs {
@@ -127,8 +202,6 @@
   }
 
   /* Player detail */
-  .player-detail { display: none; }
-  .player-detail.active { display: block; }
   .team-card {
     background: var(--card);
     border: 1px solid var(--border);
@@ -141,67 +214,23 @@
   }
   .team-card.eliminated { opacity: 0.5; }
   .team-card .team-name { font-weight: 600; }
-  .team-card .team-seed { color: var(--muted); font-size: 0.8rem; margin-left: 0.5rem; }
   .team-card .team-status { font-size: 0.85rem; text-align: right; }
   .team-card .pts-earned { color: var(--green); font-weight: 700; }
   .team-card .eliminated-tag { color: var(--red); font-size: 0.8rem; }
   .team-card .in-progress { color: var(--accent2); font-size: 0.8rem; }
   .team-card .game-score { color: var(--muted); font-size: 0.8rem; }
 
-  /* Live games */
-  .live-games { margin-bottom: 2rem; }
-  .live-games h2 { font-size: 1.3rem; margin-bottom: 0.75rem; color: var(--accent); }
-  .game-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 0.75rem 1rem;
-    margin-bottom: 0.5rem;
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    align-items: center;
-    gap: 0.5rem;
-  }
-  .game-card .team-left { text-align: right; }
-  .game-card .team-right { text-align: left; }
-  .game-card .vs {
-    text-align: center;
-    font-size: 0.75rem;
-    color: var(--muted);
-    min-width: 60px;
-  }
-  .game-card .game-team { font-weight: 600; }
-  .game-card .game-team-score { font-size: 1.1rem; font-weight: 700; }
-  .game-card .game-team.winner { color: var(--green); }
-  .game-card .game-team.loser { color: var(--red); opacity: 0.7; }
-  .game-status-badge {
-    display: inline-block;
-    padding: 0.15rem 0.5rem;
-    border-radius: 4px;
-    font-size: 0.7rem;
-    font-weight: 600;
-    text-transform: uppercase;
-  }
-  .status-live { background: rgba(239,68,68,0.2); color: #f87171; }
-  .status-final { background: rgba(100,116,139,0.2); color: #94a3b8; }
-  .status-upcoming { background: rgba(99,102,241,0.2); color: #a5b4fc; }
-  .owner-tag {
-    font-size: 0.7rem;
-    padding: 0.1rem 0.4rem;
-    border-radius: 3px;
-    background: rgba(255,107,53,0.15);
-    color: var(--accent);
-    margin-left: 0.25rem;
-  }
+  .no-games { text-align: center; color: var(--muted); padding: 2rem; grid-column: 1 / -1; }
+  .error-msg { text-align: center; color: var(--red); padding: 2rem; grid-column: 1 / -1; }
 
-  .no-games { text-align: center; color: var(--muted); padding: 2rem; }
-  .error-msg { text-align: center; color: var(--red); padding: 2rem; }
-
+  @media (max-width: 900px) {
+    .games-grid { grid-template-columns: repeat(2, 1fr); }
+  }
   @media (max-width: 640px) {
     .header h1 { font-size: 1.4rem; }
     .standings-table { font-size: 0.85rem; }
     .standings-table th, .standings-table td { padding: 0.4rem 0.5rem; }
-    .game-card { font-size: 0.85rem; }
+    .games-grid { grid-template-columns: 1fr; }
     .tab { padding: 0.4rem 0.7rem; font-size: 0.8rem; }
   }
 </style>
@@ -209,7 +238,7 @@
 <body>
 
 <div class="header">
-  <h1>March Madness Pool 2026</h1>
+  <h1><span>March Madness</span> Pool 2026</h1>
   <div class="subtitle">8 Players &bull; 64 Teams &bull; $25 Buy-in</div>
   <div class="prizes">1st: $125 &bull; 2nd: $50 &bull; 3rd: $25</div>
 </div>
@@ -219,13 +248,8 @@
 </div>
 
 <div class="container">
-  <div class="live-games" id="liveGamesSection">
-    <h2>Today's Games</h2>
-    <div id="liveGames"><div class="no-games">Loading scores...</div></div>
-  </div>
-
   <div class="standings">
-    <h2>Standings</h2>
+    <h2 class="section-title">Standings</h2>
     <table class="standings-table">
       <thead>
         <tr>
@@ -240,7 +264,12 @@
     </table>
   </div>
 
-  <h2 style="font-size:1.3rem;margin-bottom:0.75rem;color:var(--accent2);">Team Details</h2>
+  <div class="live-games" id="liveGamesSection">
+    <h2 class="section-title">Today's Games</h2>
+    <div class="games-grid" id="liveGames"><div class="no-games">Loading scores...</div></div>
+  </div>
+
+  <h2 class="section-title">Team Details</h2>
   <div class="tabs" id="playerTabs"></div>
   <div id="playerDetails"></div>
 </div>
@@ -656,13 +685,10 @@ function renderLiveGames(games) {
 
   container.innerHTML = displayGames.map(g => {
     let statusBadge = "";
-    let vsText = "vs";
     if (g.isLive) {
       statusBadge = `<span class="game-status-badge status-live">${g.statusDetail || 'LIVE'}</span>`;
-      vsText = `${g.home.score} - ${g.away.score}`;
     } else if (g.isFinal) {
       statusBadge = `<span class="game-status-badge status-final">Final</span>`;
-      vsText = `${g.home.score} - ${g.away.score}`;
     } else {
       const gameTime = new Date(g.date).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
       statusBadge = `<span class="game-status-badge status-upcoming">${gameTime}</span>`;
@@ -676,21 +702,27 @@ function renderLiveGames(games) {
     const homeClass = g.isFinal ? (g.home.winner ? "winner" : "loser") : "";
     const awayClass = g.isFinal ? (g.away.winner ? "winner" : "loser") : "";
 
-    const homeSeed = g.home.seed ? `(${g.home.seed}) ` : "";
-    const awaySeed = g.away.seed ? ` (${g.away.seed})` : "";
+    const showScores = g.isLive || g.isFinal;
+    const tileClass = g.isLive ? "game-tile live-game" : "game-tile";
 
     return `
-      <div class="game-card">
-        <div class="team-left">
-          <div class="game-team ${awayClass}">${awayOwnerTag} ${awaySeed}${g.away.shortName}</div>
-          ${g.isLive || g.isFinal ? `<div class="game-team-score ${awayClass}">${g.away.score}</div>` : ""}
+      <div class="${tileClass}">
+        <div class="game-tile-status">${statusBadge}</div>
+        <div class="game-tile-row">
+          <div class="tile-team ${awayClass}">
+            <span class="tile-seed">${g.away.seed || ''}</span>
+            ${g.away.shortName}
+            ${awayOwnerTag}
+          </div>
+          ${showScores ? `<div class="tile-score ${awayClass}">${g.away.score}</div>` : ""}
         </div>
-        <div class="vs">
-          ${statusBadge}
-        </div>
-        <div class="team-right">
-          <div class="game-team ${homeClass}">${homeSeed}${g.home.shortName} ${homeOwnerTag}</div>
-          ${g.isLive || g.isFinal ? `<div class="game-team-score ${homeClass}">${g.home.score}</div>` : ""}
+        <div class="game-tile-row">
+          <div class="tile-team ${homeClass}">
+            <span class="tile-seed">${g.home.seed || ''}</span>
+            ${g.home.shortName}
+            ${homeOwnerTag}
+          </div>
+          ${showScores ? `<div class="tile-score ${homeClass}">${g.home.score}</div>` : ""}
         </div>
       </div>
     `;
