@@ -247,76 +247,107 @@
 
 <script>
 // ==================== DRAFT DATA ====================
+// Each team maps to its ESPN team ID for exact matching.
+// Teams not in the 2025 tournament have id: null (they simply won't match any games).
 const DRAFT = {
-  "Nick": ["Duke","Gonzaga","Vandy","UCF","USF","Villanova","Penn","Prairie View A&M"],
-  "Carl": ["Michigan","Arkansas","Wisconsin","Ohio State","Utah State","Northern Iowa","Hofstra","Siena"],
-  "Dunn": ["Arizona","Michigan St","Texas Tech","Clemson","Santa Clara","Akron","California Baptist","Tennessee St"],
-  "Pat": ["Houston","St. John's","Nebraska","UCLA","Iowa","Missouri","Hawaii","Furman"],
-  "Matt": ["Purdue","Virginia","North Carolina","Saint Mary's","Saint Louis","VCU","Wright St","Idaho"],
-  "Taylor": ["Iowa State","Alabama","BYU","Kentucky","SMU","High Point","Queens","UMBC"],
-  "Noah": ["Florida","Illinois","Louisville","Tennessee","Texas A&M","NC State","North Dakota St","Long Island University"],
-  "Brooke": ["UConn","Kansas","Miami","TCU","Georgia","McNeese","Troy","Kennesaw St"]
+  "Nick": [
+    { name: "Duke", id: "150" },
+    { name: "Gonzaga", id: "2250" },
+    { name: "Vanderbilt", id: "238" },
+    { name: "UCF", id: null },
+    { name: "USF", id: null },
+    { name: "Villanova", id: null },
+    { name: "Penn", id: null },
+    { name: "Prairie View A&M / Lehigh", id: null }
+  ],
+  "Carl": [
+    { name: "Michigan", id: "130" },
+    { name: "Arkansas", id: "8" },
+    { name: "Wisconsin", id: "275" },
+    { name: "Ohio State", id: null },
+    { name: "Utah State", id: "328" },
+    { name: "Northern Iowa", id: null },
+    { name: "Hofstra", id: null },
+    { name: "Siena", id: null }
+  ],
+  "Dunn": [
+    { name: "Arizona", id: "12" },
+    { name: "Michigan State", id: "127" },
+    { name: "Texas Tech", id: "2641" },
+    { name: "Clemson", id: "228" },
+    { name: "Santa Clara", id: null },
+    { name: "Akron", id: "2006" },
+    { name: "Cal Baptist", id: null },
+    { name: "Tennessee State", id: null }
+  ],
+  "Pat": [
+    { name: "Houston", id: "248" },
+    { name: "St. John's", id: "2599" },
+    { name: "Nebraska", id: null },
+    { name: "UCLA", id: "26" },
+    { name: "Iowa", id: null },
+    { name: "Missouri", id: "142" },
+    { name: "Hawaii", id: null },
+    { name: "Furman", id: null }
+  ],
+  "Matt": [
+    { name: "Purdue", id: "2509" },
+    { name: "Virginia", id: null },
+    { name: "North Carolina", id: "153" },
+    { name: "Saint Mary's", id: "2608" },
+    { name: "Saint Louis", id: null },
+    { name: "VCU", id: "2670" },
+    { name: "Wright State", id: null },
+    { name: "Idaho", id: null }
+  ],
+  "Taylor": [
+    { name: "Iowa State", id: "66" },
+    { name: "Alabama", id: "333" },
+    { name: "BYU", id: "252" },
+    { name: "Kentucky", id: "96" },
+    { name: "Miami OH / SMU", id: null },
+    { name: "High Point", id: "2272" },
+    { name: "Queens (NC)", id: null },
+    { name: "UMBC / Howard", id: null }
+  ],
+  "Noah": [
+    { name: "Florida", id: "57" },
+    { name: "Illinois", id: "356" },
+    { name: "Louisville", id: "97" },
+    { name: "Tennessee", id: "2633" },
+    { name: "Texas A&M", id: "245" },
+    { name: "Texas / NC State", id: "251" },
+    { name: "North Dakota State", id: null },
+    { name: "Long Island", id: null }
+  ],
+  "Brooke": [
+    { name: "UConn", id: "41" },
+    { name: "Kansas", id: "2305" },
+    { name: "Miami", id: null },
+    { name: "TCU", id: null },
+    { name: "Georgia", id: "61" },
+    { name: "McNeese", id: "2377" },
+    { name: "Troy", id: "2653" },
+    { name: "Kennesaw State", id: null }
+  ]
 };
 
-// Name mapping: our draft names -> ESPN team names (add as needed)
-const NAME_ALIASES = {
-  "vandy": "vanderbilt",
-  "ucf": "ucf knights",
-  "usf": "south florida",
-  "penn": "pennsylvania",
-  "prairie view a&m": "prairie view",
-  "no. iowa": "northern iowa",
-  "mich st": "michigan st",
-  "michigan st": "michigan state",
-  "cal baptist": "california baptist",
-  "california baptist": "cal baptist",
-  "tenn state": "tennessee st",
-  "tennessee st": "tennessee state",
-  "st. john's": "st. john's",
-  "mizzou": "missouri",
-  "unc": "north carolina",
-  "saint mary's": "saint mary's",
-  "st. mary's": "saint mary's",
-  "st. louis": "saint louis",
-  "vcu": "vcu",
-  "wright state": "wright st",
-  "wright st": "wright state",
-  "miami oh": "miami (oh)",
-  "smu": "smu",
-  "miami oh/smu": "smu",
-  "queens (nc)": "queens",
-  "umbc/howard": "umbc",
-  "texas/ncst": "nc state",
-  "nc state": "north carolina state",
-  "north dakota st": "north dakota state",
-  "long island": "long island university",
-  "long island university": "liu",
-  "uconn": "connecticut",
-  "miami": "miami",
-  "mcneese": "mcneese state",
-  "kennesaw st": "kennesaw state",
-  "prairie view a&m/lehigh": "prairie view",
-};
-
-// Build reverse lookup: normalized team name -> owner
-const teamToOwner = {};
+// Build lookup: ESPN team ID -> owner name
+const idToOwner = {};
+// Also track which draft entry each ID maps to: ESPN team ID -> { owner, index }
+const idToDraftEntry = {};
 for (const [owner, teams] of Object.entries(DRAFT)) {
-  for (const team of teams) {
-    teamToOwner[team.toLowerCase()] = owner;
-    const alias = NAME_ALIASES[team.toLowerCase()];
-    if (alias) teamToOwner[alias.toLowerCase()] = owner;
-  }
+  teams.forEach((t, i) => {
+    if (t.id) {
+      idToOwner[t.id] = owner;
+      idToDraftEntry[t.id] = { owner, index: i };
+    }
+  });
 }
 
-// Try to find the owner for an ESPN team name
-function findOwner(espnName) {
-  const n = espnName.toLowerCase().trim();
-  if (teamToOwner[n]) return teamToOwner[n];
-  // Try partial match
-  for (const [key, owner] of Object.entries(teamToOwner)) {
-    if (n.includes(key) || key.includes(n)) return owner;
-  }
-  return null;
+// Find owner by ESPN team ID (extracted from game data)
+function findOwner(espnTeamId) {
+  return idToOwner[espnTeamId] || null;
 }
 
 // ==================== STATE ====================
@@ -375,6 +406,7 @@ function parseGame(event) {
     name: event.name || "",
     date: event.date,
     home: {
+      teamId: String(homeTeam.team?.id || ""),
       name: homeTeam.team?.displayName || homeTeam.team?.name || "TBD",
       shortName: homeTeam.team?.shortDisplayName || homeTeam.team?.abbreviation || "TBD",
       score: parseInt(homeTeam.score) || 0,
@@ -382,6 +414,7 @@ function parseGame(event) {
       winner: homeTeam.winner || false,
     },
     away: {
+      teamId: String(awayTeam.team?.id || ""),
       name: awayTeam.team?.displayName || awayTeam.team?.name || "TBD",
       shortName: awayTeam.team?.shortDisplayName || awayTeam.team?.abbreviation || "TBD",
       score: parseInt(awayTeam.score) || 0,
@@ -403,63 +436,78 @@ function calculateScores(games) {
   const scores = {};
   for (const owner of Object.keys(DRAFT)) {
     scores[owner] = { total: 0, teamsAlive: 0, teams: [] };
-    for (const teamName of DRAFT[owner]) {
+    for (const t of DRAFT[owner]) {
       scores[owner].teams.push({
-        name: teamName,
-        status: "alive",
+        name: t.name,
+        espnId: t.id,
+        status: t.id ? "alive" : "not-in-tournament",
         pts: 0,
         gameInfo: null,
       });
     }
   }
 
-  // For each game, find if any drafted teams are playing
+  // For each game, match by ESPN team ID
   for (const game of games) {
     if (!game) continue;
-    const homeOwner = findOwner(game.home.name);
-    const awayOwner = findOwner(game.away.name);
 
-    // Process home team
-    if (homeOwner) {
-      const teamEntry = findTeamEntry(scores[homeOwner].teams, game.home.name);
-      if (teamEntry) {
-        teamEntry.gameInfo = game;
-        if (game.isFinal) {
-          if (game.home.winner) {
-            const diff = game.home.score - game.away.score;
-            teamEntry.pts = diff;
-            teamEntry.status = "won";
-          } else {
-            teamEntry.pts = 0;
-            teamEntry.status = "eliminated";
-          }
-        } else if (game.isLive) {
-          const diff = game.home.score - game.away.score;
-          teamEntry.pts = Math.max(0, diff);
-          teamEntry.status = "playing";
+    // Process each side of the game
+    for (const side of ["home", "away"]) {
+      const otherSide = side === "home" ? "away" : "home";
+      const teamId = game[side].teamId;
+      const entry = idToDraftEntry[teamId];
+      if (!entry) continue;
+
+      const teamEntry = scores[entry.owner].teams[entry.index];
+      // A team can play multiple games in the tournament — accumulate points
+      // but only update status based on most recent game
+      const gameDate = new Date(game.date);
+      const prevDate = teamEntry.gameInfo ? new Date(teamEntry.gameInfo.date) : null;
+
+      // Only process if this game is newer than the previous one tracked
+      if (prevDate && gameDate < prevDate) continue;
+
+      teamEntry.gameInfo = game;
+      if (game.isFinal) {
+        if (game[side].winner) {
+          const diff = game[side].score - game[otherSide].score;
+          teamEntry.status = "won";
+          // Don't overwrite — accumulate across rounds
+        } else {
+          teamEntry.status = "eliminated";
         }
+      } else if (game.isLive) {
+        teamEntry.status = "playing";
       }
     }
+  }
 
-    // Process away team
-    if (awayOwner) {
-      const teamEntry = findTeamEntry(scores[awayOwner].teams, game.away.name);
-      if (teamEntry) {
-        teamEntry.gameInfo = game;
-        if (game.isFinal) {
-          if (game.away.winner) {
-            const diff = game.away.score - game.home.score;
-            teamEntry.pts = diff;
-            teamEntry.status = "won";
-          } else {
-            teamEntry.pts = 0;
-            teamEntry.status = "eliminated";
-          }
-        } else if (game.isLive) {
-          const diff = game.away.score - game.home.score;
-          teamEntry.pts = Math.max(0, diff);
-          teamEntry.status = "playing";
-        }
+  // Second pass: calculate points from ALL games (not just most recent)
+  for (const game of games) {
+    if (!game || !game.isFinal) continue;
+    for (const side of ["home", "away"]) {
+      const otherSide = side === "home" ? "away" : "home";
+      const teamId = game[side].teamId;
+      const entry = idToDraftEntry[teamId];
+      if (!entry) continue;
+      if (game[side].winner) {
+        const diff = game[side].score - game[otherSide].score;
+        scores[entry.owner].teams[entry.index].pts += diff;
+      }
+    }
+  }
+
+  // Also add live game points (potential, not finalized)
+  for (const game of games) {
+    if (!game || !game.isLive) continue;
+    for (const side of ["home", "away"]) {
+      const otherSide = side === "home" ? "away" : "home";
+      const teamId = game[side].teamId;
+      const entry = idToDraftEntry[teamId];
+      if (!entry) continue;
+      const diff = game[side].score - game[otherSide].score;
+      if (diff > 0) {
+        scores[entry.owner].teams[entry.index].pts += diff;
       }
     }
   }
@@ -470,27 +518,13 @@ function calculateScores(games) {
     let alive = 0;
     for (const t of scores[owner].teams) {
       total += t.pts;
-      if (t.status !== "eliminated") alive++;
+      if (t.status !== "eliminated" && t.status !== "not-in-tournament") alive++;
     }
     scores[owner].total = total;
     scores[owner].teamsAlive = alive;
   }
 
   return scores;
-}
-
-function findTeamEntry(teams, espnName) {
-  const n = espnName.toLowerCase();
-  for (const t of teams) {
-    const tn = t.name.toLowerCase();
-    if (tn === n) return t;
-    const alias = NAME_ALIASES[tn];
-    if (alias && alias.toLowerCase() === n) return t;
-    // Partial match
-    if (n.includes(tn) || tn.includes(n)) return t;
-    if (alias && (n.includes(alias.toLowerCase()) || alias.toLowerCase().includes(n))) return t;
-  }
-  return null;
 }
 
 // ==================== RENDERING ====================
@@ -538,7 +572,7 @@ function renderPlayerDetail(scores) {
   const teamsSorted = [...data.teams].sort((a, b) => b.pts - a.pts);
 
   container.innerHTML = teamsSorted.map(t => {
-    const eliminatedClass = t.status === "eliminated" ? "eliminated" : "";
+    const eliminatedClass = (t.status === "eliminated" || t.status === "not-in-tournament") ? "eliminated" : "";
     let statusHtml = "";
     let gameHtml = "";
 
@@ -558,6 +592,8 @@ function renderPlayerDetail(scores) {
         const detail = t.gameInfo.statusDetail || `${t.gameInfo.clock} - ${t.gameInfo.period}H`;
         gameHtml = `<div class="game-score">${t.gameInfo.home.name} ${t.gameInfo.home.score} - ${t.gameInfo.away.score} ${t.gameInfo.away.name} (${detail})</div>`;
       }
+    } else if (t.status === "not-in-tournament") {
+      statusHtml = `<span style="color:var(--muted);font-size:0.85rem;">Not in Tournament</span>`;
     } else {
       statusHtml = `<span style="color:var(--green);font-size:0.85rem;">Active</span>`;
     }
@@ -621,8 +657,8 @@ function renderLiveGames(games) {
       statusBadge = `<span class="game-status-badge status-upcoming">${gameTime}</span>`;
     }
 
-    const homeOwner = findOwner(g.home.name);
-    const awayOwner = findOwner(g.away.name);
+    const homeOwner = findOwner(g.home.teamId);
+    const awayOwner = findOwner(g.away.teamId);
     const homeOwnerTag = homeOwner ? `<span class="owner-tag">${homeOwner}</span>` : "";
     const awayOwnerTag = awayOwner ? `<span class="owner-tag">${awayOwner}</span>` : "";
 
