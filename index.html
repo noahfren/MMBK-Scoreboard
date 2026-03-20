@@ -235,7 +235,7 @@ function parseGame(event) {
       name: homeTeam.team?.displayName || homeTeam.team?.name || "TBD",
       shortName: homeTeam.team?.shortDisplayName || homeTeam.team?.abbreviation || "TBD",
       score: parseInt(homeTeam.score) || 0,
-      seed: (homeTeam.curatedRank?.current !== 99 && homeTeam.curatedRank?.current) || homeTeam.statistics?.find(s => s.name === "seed")?.value || "",
+      seed: homeTeam.team?.id ? (homeTeam.curatedRank?.current || homeTeam.statistics?.find(s => s.name === "seed")?.value || "") : "",
       winner: homeTeam.winner || false,
     },
     away: {
@@ -243,7 +243,7 @@ function parseGame(event) {
       name: awayTeam.team?.displayName || awayTeam.team?.name || "TBD",
       shortName: awayTeam.team?.shortDisplayName || awayTeam.team?.abbreviation || "TBD",
       score: parseInt(awayTeam.score) || 0,
-      seed: (awayTeam.curatedRank?.current !== 99 && awayTeam.curatedRank?.current) || "",
+      seed: awayTeam.team?.id ? (awayTeam.curatedRank?.current || "") : "",
       winner: awayTeam.winner || false,
     },
     status: statusType, statusDetail, clock, period,
