@@ -470,10 +470,7 @@ function renderPlayerDetail(scores, games) {
               <span class="flex-1">vs ${opp.seed ? `<span class="text-mid text-xs font-normal">${opp.seed}</span> ` : ''}${opp.shortName} ${ownerTag}</span>
             </div>`;
         }).join("");
-        upcomingHtml = `<div class="mt-2 pt-2 border-t border-lite">
-          <div class="text-[0.65rem] font-semibold text-mid uppercase tracking-wide mb-1">Upcoming</div>
-          ${upcomingRows}
-        </div>`;
+        upcomingHtml = `<div class="mt-2 pt-2 border-t border-lite">${upcomingRows}</div>`;
       }
     }
 
