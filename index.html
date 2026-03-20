@@ -390,7 +390,7 @@ function renderPlayerTabs(scores) {
   });
 }
 
-function renderPlayerDetail(scores) {
+function renderPlayerDetail(scores, games) {
   const container = document.getElementById("playerDetails");
   if (!activeTab || !scores[activeTab]) { container.innerHTML = ""; return; }
 
@@ -424,7 +424,7 @@ function renderPlayerDetail(scores) {
         const dateStr = new Date(g.date).toLocaleDateString([], { month: 'short', day: 'numeric' });
         const liveDetail = g.isLive ? ` (${g.statusDetail || 'LIVE'})` : "";
         return `
-          <div class="flex items-center gap-2 py-0.5 text-xs">
+          <div class="flex items-center gap-2 py-0.5 px-1 text-xs rounded hover:bg-lite/30 transition-colors">
             <span class="text-mid min-w-[50px]">${dateStr}</span>
             <span class="font-bold min-w-[32px] text-center px-1 py-0.5 rounded text-[0.65rem] ${rBg}">${result}</span>
             <span class="flex-1">${g.teamScore}-${g.oppScore} vs ${g.opponentSeed ? '(' + g.opponentSeed + ') ' : ''}${g.opponent}${liveDetail}</span>
@@ -434,6 +434,36 @@ function renderPlayerDetail(scores) {
       gameLogHtml = `<div class="mt-2 pt-2 border-t border-lite">${rows}</div>`;
     }
 
+    // Find upcoming (scheduled) games for this team
+    let upcomingHtml = "";
+    if (games && t.espnId && t.status !== "eliminated" && t.status !== "not-in-tournament") {
+      const upcoming = games.filter(g =>
+        g && g.isScheduled &&
+        (g.home.teamId === t.espnId || g.away.teamId === t.espnId)
+      ).sort((a, b) => new Date(a.date) - new Date(b.date));
+
+      if (upcoming.length > 0) {
+        const upcomingRows = upcoming.map(g => {
+          const side = g.home.teamId === t.espnId ? "home" : "away";
+          const opp = side === "home" ? g.away : g.home;
+          const gameTime = new Date(g.date).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+          const dateStr = new Date(g.date).toLocaleDateString([], { month: 'short', day: 'numeric' });
+          const oppOwner = findOwner(opp.teamId);
+          const ownerTag = oppOwner ? `<span class="px-1 py-0.5 rounded bg-dark/10 text-dark text-[0.6rem]">${oppOwner}</span>` : "";
+          return `
+            <div class="flex items-center gap-2 py-0.5 px-1 text-xs rounded hover:bg-lite/30 transition-colors">
+              <span class="text-mid min-w-[50px]">${dateStr}</span>
+              <span class="font-bold min-w-[32px] text-center px-1 py-0.5 rounded text-[0.65rem] bg-dark/10 text-dark">${gameTime}</span>
+              <span class="flex-1">vs ${opp.seed ? '(' + opp.seed + ') ' : ''}${opp.shortName} ${ownerTag}</span>
+            </div>`;
+        }).join("");
+        upcomingHtml = `<div class="mt-2 pt-2 border-t border-lite">
+          <div class="text-[0.65rem] font-semibold text-mid uppercase tracking-wide mb-1">Upcoming</div>
+          ${upcomingRows}
+        </div>`;
+      }
+    }
+
     return `
       <div class="bg-card border border-lite rounded-lg p-3 mb-2 shadow-sm ${dimmed}">
         <div class="flex justify-between items-center">
@@ -441,6 +471,7 @@ function renderPlayerDetail(scores) {
           <div>${statusHtml}</div>
         </div>
         ${gameLogHtml}
+        ${upcomingHtml}
       </div>`;
   }).join("");
 }
@@ -547,7 +578,7 @@ async function refresh() {
     playerScores = calculateScores(allGames);
     renderStandings(playerScores);
     renderPlayerTabs(playerScores);
-    renderPlayerDetail(playerScores);
+    renderPlayerDetail(playerScores, allGames);
     renderLiveGames(allGames);
     document.getElementById("lastUpdate").textContent = new Date().toLocaleTimeString();
   } catch (err) {
