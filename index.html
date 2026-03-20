@@ -623,6 +623,10 @@ async function refresh() {
     allGames = await loadAllScores();
     playerScores = calculateScores(allGames);
     renderStandings(playerScores);
+    if (!activeTab) {
+      const sorted = Object.entries(playerScores).sort((a, b) => b[1].total - a[1].total);
+      if (sorted.length > 0) activeTab = sorted[0][0];
+    }
     renderPlayerTabs(playerScores);
     renderPlayerDetail(playerScores, allGames);
     renderLiveGames(allGames, playerScores);
