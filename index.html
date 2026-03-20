@@ -262,7 +262,7 @@ function calculateScores(games) {
     scores[owner] = { total: 0, teamsAlive: 0, teams: [] };
     for (const t of DRAFT[owner]) {
       scores[owner].teams.push({
-        name: t.name, espnId: t.id,
+        name: t.name, espnId: t.id, seed: "",
         status: t.id ? "alive" : "not-in-tournament",
         pts: 0, gameInfo: null, gameHistory: [],
       });
@@ -282,6 +282,7 @@ function calculateScores(games) {
       const prevDate = teamEntry.gameInfo ? new Date(teamEntry.gameInfo.date) : null;
       if (prevDate && gameDate < prevDate) continue;
       teamEntry.gameInfo = game;
+      if (game[side].seed) teamEntry.seed = game[side].seed;
       if (game.isFinal) {
         teamEntry.status = game[side].winner ? "won" : "eliminated";
       } else if (game.isLive) {
@@ -439,7 +440,7 @@ function renderPlayerDetail(scores, games) {
           <div class="flex items-center gap-2 py-0.5 px-1 text-xs rounded hover:bg-lite/30 transition-colors">
             <span class="text-mid min-w-[50px]">${dateStr}</span>
             <span class="font-bold min-w-[32px] text-center px-1 py-0.5 rounded text-[0.65rem] ${rBg}">${result}</span>
-            <span class="flex-1">${g.teamScore}-${g.oppScore} vs ${g.opponentSeed ? '(' + g.opponentSeed + ') ' : ''}${g.opponent}${liveDetail}</span>
+            <span class="flex-1">${g.teamScore}-${g.oppScore} vs ${g.opponentSeed ? `<span class="text-mid text-xs font-normal">${g.opponentSeed}</span> ` : ''}${g.opponent}${liveDetail}</span>
             <span class="font-bold min-w-[50px] text-right ${ptsColor}">${ptsLabel}</span>
           </div>`;
       }).join("");
@@ -466,7 +467,7 @@ function renderPlayerDetail(scores, games) {
             <div class="flex items-center gap-2 py-0.5 px-1 text-xs rounded hover:bg-lite/30 transition-colors">
               <span class="text-mid min-w-[50px]">${dateStr}</span>
               <span class="font-bold min-w-[32px] text-center px-1 py-0.5 rounded text-[0.65rem] bg-dark/10 text-dark">${gameTime}</span>
-              <span class="flex-1">vs ${opp.seed ? '(' + opp.seed + ') ' : ''}${opp.shortName} ${ownerTag}</span>
+              <span class="flex-1">vs ${opp.seed ? `<span class="text-mid text-xs font-normal">${opp.seed}</span> ` : ''}${opp.shortName} ${ownerTag}</span>
             </div>`;
         }).join("");
         upcomingHtml = `<div class="mt-2 pt-2 border-t border-lite">
@@ -479,7 +480,10 @@ function renderPlayerDetail(scores, games) {
     return `
       <div class="bg-card border border-lite rounded-lg p-3 mb-2 shadow-sm ${dimmed}">
         <div class="flex justify-between items-center">
-          <span class="font-semibold">${t.name}</span>
+          <span class="font-semibold flex items-center gap-1.5">
+            ${t.seed ? `<span class="text-mid text-xs font-normal">${t.seed}</span>` : ''}
+            ${t.name}
+          </span>
           <div>${statusHtml}</div>
         </div>
         ${gameLogHtml}
