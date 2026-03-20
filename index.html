@@ -65,6 +65,7 @@ tailwind.config = {
   <!-- Today's Games -->
   <div class="mb-8" id="liveGamesSection">
     <h2 class="text-xl font-bold text-dark uppercase tracking-wide mb-3">Today's Games</h2>
+    <div class="flex flex-wrap gap-1 mb-4" id="gameFilterTabs"></div>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" id="liveGames">
       <div class="text-center text-mid py-8 col-span-full">Loading scores...</div>
     </div>
@@ -185,6 +186,7 @@ function findOwner(espnTeamId) {
 let allGames = [];
 let playerScores = {};
 let activeTab = null;
+let activeGameFilter = null;
 
 // ==================== ESPN API ====================
 const ESPN_BASE = "https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard";
@@ -201,9 +203,7 @@ function getTournamentDates() {
   const dates = [];
   const start = new Date(2026, 2, 17);
   const end = new Date(2026, 3, 7);
-  const today = new Date();
-  const endDate = today < end ? today : end;
-  for (let d = new Date(start); d <= endDate; d.setDate(d.getDate() + 1)) {
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
     const yyyy = d.getFullYear();
     const mm = String(d.getMonth() + 1).padStart(2, '0');
     const dd = String(d.getDate()).padStart(2, '0');
@@ -260,7 +260,7 @@ function calculateScores(games) {
     scores[owner] = { total: 0, teamsAlive: 0, teams: [] };
     for (const t of DRAFT[owner]) {
       scores[owner].teams.push({
-        name: t.name, espnId: t.id,
+        name: t.name, espnId: t.id, seed: "",
         status: t.id ? "alive" : "not-in-tournament",
         pts: 0, gameInfo: null, gameHistory: [],
       });
@@ -280,6 +280,7 @@ function calculateScores(games) {
       const prevDate = teamEntry.gameInfo ? new Date(teamEntry.gameInfo.date) : null;
       if (prevDate && gameDate < prevDate) continue;
       teamEntry.gameInfo = game;
+      if (game[side].seed) teamEntry.seed = game[side].seed;
       if (game.isFinal) {
         teamEntry.status = game[side].winner ? "won" : "eliminated";
       } else if (game.isLive) {
@@ -326,27 +327,37 @@ function calculateScores(games) {
     scores[owner].teamsAlive = alive;
   }
 
-  // Calculate today's games per owner
+  // Calculate today's games per owner (count unique games, not team appearances)
   const now = new Date();
   const todayStr = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+  const ownerGamesPlayedToday = {}, ownerGamesLeftToday = {};
   for (const owner of Object.keys(scores)) {
     scores[owner].gamesPlayedToday = 0;
     scores[owner].gamesLeftToday = 0;
+    ownerGamesPlayedToday[owner] = new Set();
+    ownerGamesLeftToday[owner] = new Set();
   }
   for (const game of games) {
     if (!game) continue;
     const gameDate = new Date(game.date);
     const gameDateStr = `${gameDate.getFullYear()}${String(gameDate.getMonth()+1).padStart(2,'0')}${String(gameDate.getDate()).padStart(2,'0')}`;
     if (gameDateStr !== todayStr && !game.isLive) continue;
+    const ownersInGame = new Set();
     for (const side of ["home", "away"]) {
       const owner = idToOwner[game[side].teamId];
-      if (!owner || !scores[owner]) continue;
+      if (owner && scores[owner]) ownersInGame.add(owner);
+    }
+    for (const owner of ownersInGame) {
       if (game.isFinal) {
-        scores[owner].gamesPlayedToday++;
+        ownerGamesPlayedToday[owner].add(game.id);
       } else {
-        scores[owner].gamesLeftToday++;
+        ownerGamesLeftToday[owner].add(game.id);
       }
     }
+  }
+  for (const owner of Object.keys(scores)) {
+    scores[owner].gamesPlayedToday = ownerGamesPlayedToday[owner].size;
+    scores[owner].gamesLeftToday = ownerGamesLeftToday[owner].size;
   }
 
   return scores;
@@ -385,12 +396,12 @@ function renderPlayerTabs(scores) {
     tab.addEventListener("click", () => {
       activeTab = activeTab === tab.dataset.player ? null : tab.dataset.player;
       renderPlayerTabs(scores);
-      renderPlayerDetail(scores);
+      renderPlayerDetail(scores, allGames);
     });
   });
 }
 
-function renderPlayerDetail(scores) {
+function renderPlayerDetail(scores, games) {
   const container = document.getElementById("playerDetails");
   if (!activeTab || !scores[activeTab]) { container.innerHTML = ""; return; }
 
@@ -424,29 +435,61 @@ function renderPlayerDetail(scores) {
         const dateStr = new Date(g.date).toLocaleDateString([], { month: 'short', day: 'numeric' });
         const liveDetail = g.isLive ? ` (${g.statusDetail || 'LIVE'})` : "";
         return `
-          <div class="flex items-center gap-2 py-0.5 text-xs">
+          <div class="flex items-center gap-2 py-0.5 px-1 text-xs rounded hover:bg-lite/30 transition-colors">
             <span class="text-mid min-w-[50px]">${dateStr}</span>
             <span class="font-bold min-w-[32px] text-center px-1 py-0.5 rounded text-[0.65rem] ${rBg}">${result}</span>
-            <span class="flex-1">${g.teamScore}-${g.oppScore} vs ${g.opponentSeed ? '(' + g.opponentSeed + ') ' : ''}${g.opponent}${liveDetail}</span>
+            <span class="flex-1">${g.teamScore}-${g.oppScore} vs ${g.opponentSeed ? `<span class="text-mid text-xs font-normal">${g.opponentSeed}</span> ` : ''}${g.opponent}${liveDetail}</span>
             <span class="font-bold min-w-[50px] text-right ${ptsColor}">${ptsLabel}</span>
           </div>`;
       }).join("");
       gameLogHtml = `<div class="mt-2 pt-2 border-t border-lite">${rows}</div>`;
     }
 
+    // Find upcoming (scheduled) games for this team
+    let upcomingHtml = "";
+    if (games && t.espnId && t.status !== "eliminated" && t.status !== "not-in-tournament") {
+      const upcoming = games.filter(g =>
+        g && g.isScheduled &&
+        (g.home.teamId === t.espnId || g.away.teamId === t.espnId)
+      ).sort((a, b) => new Date(a.date) - new Date(b.date));
+
+      if (upcoming.length > 0) {
+        const upcomingRows = upcoming.map(g => {
+          const side = g.home.teamId === t.espnId ? "home" : "away";
+          const opp = side === "home" ? g.away : g.home;
+          const gameTime = new Date(g.date).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+          const dateStr = new Date(g.date).toLocaleDateString([], { month: 'short', day: 'numeric' });
+          const oppOwner = findOwner(opp.teamId);
+          const ownerTag = oppOwner ? `<span class="px-1 py-0.5 rounded bg-dark/10 text-dark text-[0.6rem]">${oppOwner}</span>` : "";
+          return `
+            <div class="flex items-center gap-2 py-0.5 px-1 text-xs rounded hover:bg-lite/30 transition-colors">
+              <span class="text-mid min-w-[50px]">${dateStr}</span>
+              <span class="font-bold min-w-[32px] text-center px-1 py-0.5 rounded text-[0.65rem] bg-dark/10 text-dark">${gameTime}</span>
+              <span class="flex-1">vs ${opp.seed ? `<span class="text-mid text-xs font-normal">${opp.seed}</span> ` : ''}${opp.shortName} ${ownerTag}</span>
+            </div>`;
+        }).join("");
+        upcomingHtml = `<div class="mt-2 pt-2 border-t border-lite">${upcomingRows}</div>`;
+      }
+    }
+
     return `
       <div class="bg-card border border-lite rounded-lg p-3 mb-2 shadow-sm ${dimmed}">
         <div class="flex justify-between items-center">
-          <span class="font-semibold">${t.name}</span>
+          <span class="font-semibold flex items-center gap-1.5">
+            ${t.seed ? `<span class="text-mid text-xs font-normal">${t.seed}</span>` : ''}
+            ${t.name}
+          </span>
           <div>${statusHtml}</div>
         </div>
         ${gameLogHtml}
+        ${upcomingHtml}
       </div>`;
   }).join("");
 }
 
-function renderLiveGames(games) {
+function renderLiveGames(games, scores) {
   const container = document.getElementById("liveGames");
+  const filterTabs = document.getElementById("gameFilterTabs");
   const now = new Date();
   const todayStr = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
 
@@ -457,8 +500,37 @@ function renderLiveGames(games) {
     return gStr === todayStr || g.isLive;
   });
 
-  const displayGames = todaysGames.length > 0 ? todaysGames :
+  const baseGames = todaysGames.length > 0 ? todaysGames :
     games.filter(g => g && g.isFinal).slice(-10);
+
+  // Render filter tabs (only players who have a team in today's pool of games)
+  if (scores) {
+    const sorted = Object.keys(scores).sort((a, b) => scores[b].total - scores[a].total);
+    const playersWithGames = sorted.filter(owner =>
+      baseGames.some(g => g && (idToOwner[g.home.teamId] === owner || idToOwner[g.away.teamId] === owner))
+    );
+    if (playersWithGames.length > 0) {
+      filterTabs.innerHTML = playersWithGames.map(name => {
+        const isActive = activeGameFilter === name;
+        const cls = isActive
+          ? 'bg-dark text-white border-dark'
+          : 'bg-card text-mid border-mm-border hover:border-dark hover:text-dark';
+        return `<div class="py-2 px-4 border rounded-md cursor-pointer text-sm transition-all ${cls}" data-filter="${name}">${name}</div>`;
+      }).join("");
+      filterTabs.querySelectorAll("[data-filter]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          activeGameFilter = activeGameFilter === btn.dataset.filter ? null : btn.dataset.filter;
+          renderLiveGames(games, scores);
+        });
+      });
+    } else {
+      filterTabs.innerHTML = "";
+    }
+  }
+
+  const displayGames = activeGameFilter
+    ? baseGames.filter(g => idToOwner[g.home.teamId] === activeGameFilter || idToOwner[g.away.teamId] === activeGameFilter)
+    : baseGames;
 
   if (displayGames.length === 0) {
     container.innerHTML = '<div class="text-center text-mid py-8 col-span-full">No games today. Check back on game day!</div>';
@@ -546,9 +618,13 @@ async function refresh() {
     allGames = await loadAllScores();
     playerScores = calculateScores(allGames);
     renderStandings(playerScores);
+    if (!activeTab) {
+      const sorted = Object.entries(playerScores).sort((a, b) => b[1].total - a[1].total);
+      if (sorted.length > 0) activeTab = sorted[0][0];
+    }
     renderPlayerTabs(playerScores);
-    renderPlayerDetail(playerScores);
-    renderLiveGames(allGames);
+    renderPlayerDetail(playerScores, allGames);
+    renderLiveGames(allGames, playerScores);
     document.getElementById("lastUpdate").textContent = new Date().toLocaleTimeString();
   } catch (err) {
     console.error("Refresh error:", err);
