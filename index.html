@@ -65,6 +65,7 @@ tailwind.config = {
   <!-- Today's Games -->
   <div class="mb-8" id="liveGamesSection">
     <h2 class="text-xl font-bold text-dark uppercase tracking-wide mb-3">Today's Games</h2>
+    <div class="flex flex-wrap gap-1 mb-4" id="gameFilterTabs"></div>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" id="liveGames">
       <div class="text-center text-mid py-8 col-span-full">Loading scores...</div>
     </div>
@@ -185,6 +186,7 @@ function findOwner(espnTeamId) {
 let allGames = [];
 let playerScores = {};
 let activeTab = null;
+let activeGameFilter = null;
 
 // ==================== ESPN API ====================
 const ESPN_BASE = "https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard";
@@ -326,27 +328,37 @@ function calculateScores(games) {
     scores[owner].teamsAlive = alive;
   }
 
-  // Calculate today's games per owner
+  // Calculate today's games per owner (count unique games, not team appearances)
   const now = new Date();
   const todayStr = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+  const ownerGamesPlayedToday = {}, ownerGamesLeftToday = {};
   for (const owner of Object.keys(scores)) {
     scores[owner].gamesPlayedToday = 0;
     scores[owner].gamesLeftToday = 0;
+    ownerGamesPlayedToday[owner] = new Set();
+    ownerGamesLeftToday[owner] = new Set();
   }
   for (const game of games) {
     if (!game) continue;
     const gameDate = new Date(game.date);
     const gameDateStr = `${gameDate.getFullYear()}${String(gameDate.getMonth()+1).padStart(2,'0')}${String(gameDate.getDate()).padStart(2,'0')}`;
     if (gameDateStr !== todayStr && !game.isLive) continue;
+    const ownersInGame = new Set();
     for (const side of ["home", "away"]) {
       const owner = idToOwner[game[side].teamId];
-      if (!owner || !scores[owner]) continue;
+      if (owner && scores[owner]) ownersInGame.add(owner);
+    }
+    for (const owner of ownersInGame) {
       if (game.isFinal) {
-        scores[owner].gamesPlayedToday++;
+        ownerGamesPlayedToday[owner].add(game.id);
       } else {
-        scores[owner].gamesLeftToday++;
+        ownerGamesLeftToday[owner].add(game.id);
       }
     }
+  }
+  for (const owner of Object.keys(scores)) {
+    scores[owner].gamesPlayedToday = ownerGamesPlayedToday[owner].size;
+    scores[owner].gamesLeftToday = ownerGamesLeftToday[owner].size;
   }
 
   return scores;
@@ -385,7 +397,7 @@ function renderPlayerTabs(scores) {
     tab.addEventListener("click", () => {
       activeTab = activeTab === tab.dataset.player ? null : tab.dataset.player;
       renderPlayerTabs(scores);
-      renderPlayerDetail(scores);
+      renderPlayerDetail(scores, allGames);
     });
   });
 }
@@ -476,8 +488,9 @@ function renderPlayerDetail(scores, games) {
   }).join("");
 }
 
-function renderLiveGames(games) {
+function renderLiveGames(games, scores) {
   const container = document.getElementById("liveGames");
+  const filterTabs = document.getElementById("gameFilterTabs");
   const now = new Date();
   const todayStr = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
 
@@ -488,8 +501,37 @@ function renderLiveGames(games) {
     return gStr === todayStr || g.isLive;
   });
 
-  const displayGames = todaysGames.length > 0 ? todaysGames :
+  const baseGames = todaysGames.length > 0 ? todaysGames :
     games.filter(g => g && g.isFinal).slice(-10);
+
+  // Render filter tabs (only players who have a team in today's pool of games)
+  if (scores) {
+    const sorted = Object.keys(scores).sort((a, b) => scores[b].total - scores[a].total);
+    const playersWithGames = sorted.filter(owner =>
+      baseGames.some(g => g && (idToOwner[g.home.teamId] === owner || idToOwner[g.away.teamId] === owner))
+    );
+    if (playersWithGames.length > 0) {
+      filterTabs.innerHTML = playersWithGames.map(name => {
+        const isActive = activeGameFilter === name;
+        const cls = isActive
+          ? 'bg-dark text-white border-dark'
+          : 'bg-card text-mid border-mm-border hover:border-dark hover:text-dark';
+        return `<div class="py-2 px-4 border rounded-md cursor-pointer text-sm transition-all ${cls}" data-filter="${name}">${name}</div>`;
+      }).join("");
+      filterTabs.querySelectorAll("[data-filter]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          activeGameFilter = activeGameFilter === btn.dataset.filter ? null : btn.dataset.filter;
+          renderLiveGames(games, scores);
+        });
+      });
+    } else {
+      filterTabs.innerHTML = "";
+    }
+  }
+
+  const displayGames = activeGameFilter
+    ? baseGames.filter(g => idToOwner[g.home.teamId] === activeGameFilter || idToOwner[g.away.teamId] === activeGameFilter)
+    : baseGames;
 
   if (displayGames.length === 0) {
     container.innerHTML = '<div class="text-center text-mid py-8 col-span-full">No games today. Check back on game day!</div>';
@@ -579,7 +621,7 @@ async function refresh() {
     renderStandings(playerScores);
     renderPlayerTabs(playerScores);
     renderPlayerDetail(playerScores, allGames);
-    renderLiveGames(allGames);
+    renderLiveGames(allGames, playerScores);
     document.getElementById("lastUpdate").textContent = new Date().toLocaleTimeString();
   } catch (err) {
     console.error("Refresh error:", err);
