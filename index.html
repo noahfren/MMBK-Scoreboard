@@ -71,7 +71,12 @@ tailwind.config = {
 
   <!-- Today's Games -->
   <div class="mb-8" id="liveGamesSection">
-    <h2 class="text-xl font-bold text-dark uppercase tracking-wide mb-3">This Round's Games</h2>
+    <div class="flex items-center gap-3 mb-3">
+      <h2 class="text-xl font-bold text-dark uppercase tracking-wide">Today's Games</h2>
+      <div id="roundSelectorContainer" style="display:none">
+        <select id="roundSelector" class="text-sm border border-mm-border rounded-md px-2 py-1 bg-card text-dark focus:outline-none focus:border-dark cursor-pointer"></select>
+      </div>
+    </div>
     <div class="flex flex-wrap gap-1 mb-4" id="gameFilterTabs"></div>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" id="liveGames">
       <div class="text-center text-mid py-8 col-span-full">Loading scores...</div>
@@ -215,6 +220,7 @@ let allGames = [];
 let playerScores = {};
 let activeTab = null;
 let activeGameFilter = null;
+let selectedRound = null;
 
 // ==================== ESPN API ====================
 const ESPN_BASE = "https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard";
@@ -517,22 +523,54 @@ function renderPlayerDetail(scores, games) {
 function renderLiveGames(games, scores) {
   const container = document.getElementById("liveGames");
   const filterTabs = document.getElementById("gameFilterTabs");
-  const currentRound = getCurrentRound();
-
-  // Update section header to show current round name
   const header = document.querySelector("#liveGamesSection h2");
-  if (header) header.textContent = `${currentRound.name} Games`;
+  const roundSelectorContainer = document.getElementById("roundSelectorContainer");
+  const roundSelector = document.getElementById("roundSelector");
 
-  const roundGames = games.filter(g => {
-    if (!g) return false;
-    if (g.isLive) return true;
-    const gDate = new Date(g.date);
-    const gStr = `${gDate.getFullYear()}${String(gDate.getMonth()+1).padStart(2,'0')}${String(gDate.getDate()).padStart(2,'0')}`;
-    return gStr >= currentRound.start && gStr <= currentRound.end;
-  });
+  const roundSelectorEnabled = typeof posthog !== 'undefined' && posthog.isFeatureFlagEnabled('round-selector');
 
-  const baseGames = roundGames.length > 0 ? roundGames :
-    games.filter(g => g && g.isFinal).slice(-10);
+  let baseGames;
+  if (roundSelectorEnabled) {
+    // Show round dropdown and filter by selected round
+    if (roundSelectorContainer) roundSelectorContainer.style.display = '';
+    if (roundSelector && roundSelector.options.length === 0) {
+      ROUNDS.forEach((r, i) => {
+        const opt = document.createElement('option');
+        opt.value = i;
+        opt.textContent = r.name;
+        roundSelector.appendChild(opt);
+      });
+      roundSelector.addEventListener('change', () => {
+        selectedRound = ROUNDS[parseInt(roundSelector.value)];
+        activeGameFilter = null;
+        renderLiveGames(games, scores);
+      });
+    }
+    const activeRound = selectedRound || getCurrentRound();
+    if (roundSelector) roundSelector.value = ROUNDS.indexOf(activeRound);
+    if (header) header.textContent = `${activeRound.name} Games`;
+    const roundGames = games.filter(g => {
+      if (!g) return false;
+      if (g.isLive) return true;
+      const gDate = new Date(g.date);
+      const gStr = `${gDate.getFullYear()}${String(gDate.getMonth()+1).padStart(2,'0')}${String(gDate.getDate()).padStart(2,'0')}`;
+      return gStr >= activeRound.start && gStr <= activeRound.end;
+    });
+    baseGames = roundGames.length > 0 ? roundGames : games.filter(g => g && g.isFinal).slice(-10);
+  } else {
+    // Original behavior: show today's games only
+    if (roundSelectorContainer) roundSelectorContainer.style.display = 'none';
+    if (header) header.textContent = "Today's Games";
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+    const todaysGames = games.filter(g => {
+      if (!g) return false;
+      const gDate = new Date(g.date);
+      const gStr = `${gDate.getFullYear()}${String(gDate.getMonth()+1).padStart(2,'0')}${String(gDate.getDate()).padStart(2,'0')}`;
+      return gStr === todayStr || g.isLive;
+    });
+    baseGames = todaysGames.length > 0 ? todaysGames : games.filter(g => g && g.isFinal).slice(-10);
+  }
 
   // Render filter tabs (only players who have a team in today's pool of games)
   if (scores) {
@@ -564,7 +602,7 @@ function renderLiveGames(games, scores) {
     : baseGames;
 
   if (displayGames.length === 0) {
-    container.innerHTML = `<div class="text-center text-mid py-8 col-span-full">No games for ${currentRound.name}. Check back on game day!</div>`;
+    container.innerHTML = '<div class="text-center text-mid py-8 col-span-full">No games today. Check back on game day!</div>';
     return;
   }
 
