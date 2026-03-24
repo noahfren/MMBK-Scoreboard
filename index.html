@@ -704,6 +704,10 @@ async function refresh() {
 
 refresh();
 setInterval(refresh, 30000);
+
+posthog.onFeatureFlags(function() {
+  renderLiveGames(allGames, playerScores);
+});
 </script>
 
 </body>
