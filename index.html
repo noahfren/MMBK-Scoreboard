@@ -71,7 +71,7 @@ tailwind.config = {
 
   <!-- Today's Games -->
   <div class="mb-8" id="liveGamesSection">
-    <h2 class="text-xl font-bold text-dark uppercase tracking-wide mb-3">Today's Games</h2>
+    <h2 class="text-xl font-bold text-dark uppercase tracking-wide mb-3">This Round's Games</h2>
     <div class="flex flex-wrap gap-1 mb-4" id="gameFilterTabs"></div>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" id="liveGames">
       <div class="text-center text-mid py-8 col-span-full">Loading scores...</div>
@@ -187,6 +187,27 @@ for (const [owner, teams] of Object.entries(DRAFT)) {
 
 function findOwner(espnTeamId) {
   return idToOwner[espnTeamId] || null;
+}
+
+// ==================== TOURNAMENT ROUNDS ====================
+const ROUNDS = [
+  { name: "First Four",    start: "20260317", end: "20260318" },
+  { name: "Round of 64",   start: "20260319", end: "20260320" },
+  { name: "Round of 32",   start: "20260321", end: "20260322" },
+  { name: "Sweet 16",      start: "20260326", end: "20260327" },
+  { name: "Elite 8",       start: "20260328", end: "20260329" },
+  { name: "Final Four",    start: "20260404", end: "20260404" },
+  { name: "Championship",  start: "20260406", end: "20260406" },
+];
+
+function getCurrentRound() {
+  const now = new Date();
+  const todayStr = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+  let currentRound = ROUNDS[0];
+  for (const r of ROUNDS) {
+    if (r.start <= todayStr) currentRound = r;
+  }
+  return currentRound;
 }
 
 // ==================== STATE ====================
@@ -335,22 +356,7 @@ function calculateScores(games) {
   }
 
   // Calculate this round's games per owner (count unique games, not team appearances)
-  const ROUNDS = [
-    { name: "First Four",    start: "20260317", end: "20260318" },
-    { name: "Round of 64",   start: "20260319", end: "20260320" },
-    { name: "Round of 32",   start: "20260321", end: "20260322" },
-    { name: "Sweet 16",      start: "20260326", end: "20260327" },
-    { name: "Elite 8",       start: "20260328", end: "20260329" },
-    { name: "Final Four",    start: "20260404", end: "20260404" },
-    { name: "Championship",  start: "20260406", end: "20260406" },
-  ];
-  const now = new Date();
-  const todayStr = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
-  // Find current round: the latest round whose start date <= today
-  let currentRound = ROUNDS[0];
-  for (const r of ROUNDS) {
-    if (r.start <= todayStr) currentRound = r;
-  }
+  const currentRound = getCurrentRound();
   const ownerGamesPlayedRound = {}, ownerGamesLeftRound = {};
   for (const owner of Object.keys(scores)) {
     scores[owner].gamesPlayedRound = 0;
@@ -511,17 +517,21 @@ function renderPlayerDetail(scores, games) {
 function renderLiveGames(games, scores) {
   const container = document.getElementById("liveGames");
   const filterTabs = document.getElementById("gameFilterTabs");
-  const now = new Date();
-  const todayStr = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+  const currentRound = getCurrentRound();
 
-  const todaysGames = games.filter(g => {
+  // Update section header to show current round name
+  const header = document.querySelector("#liveGamesSection h2");
+  if (header) header.textContent = `${currentRound.name} Games`;
+
+  const roundGames = games.filter(g => {
     if (!g) return false;
+    if (g.isLive) return true;
     const gDate = new Date(g.date);
     const gStr = `${gDate.getFullYear()}${String(gDate.getMonth()+1).padStart(2,'0')}${String(gDate.getDate()).padStart(2,'0')}`;
-    return gStr === todayStr || g.isLive;
+    return gStr >= currentRound.start && gStr <= currentRound.end;
   });
 
-  const baseGames = todaysGames.length > 0 ? todaysGames :
+  const baseGames = roundGames.length > 0 ? roundGames :
     games.filter(g => g && g.isFinal).slice(-10);
 
   // Render filter tabs (only players who have a team in today's pool of games)
@@ -554,7 +564,7 @@ function renderLiveGames(games, scores) {
     : baseGames;
 
   if (displayGames.length === 0) {
-    container.innerHTML = '<div class="text-center text-mid py-8 col-span-full">No games today. Check back on game day!</div>';
+    container.innerHTML = `<div class="text-center text-mid py-8 col-span-full">No games for ${currentRound.name}. Check back on game day!</div>`;
     return;
   }
 
